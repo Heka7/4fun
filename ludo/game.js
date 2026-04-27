@@ -232,9 +232,22 @@ function handleBoardClick(row, col) {
   for (const m of G.movablePieces) {
     const pos = pl.pieces[m.pieceIdx];
     let pRow, pCol;
-    if (pos === -1) [pRow, pCol] = HOME_POSITIONS[pl.color][m.pieceIdx];
-    else [pRow, pCol] = PATHS[pl.color][pos];
-    if (pRow === row && pCol === col) { movePiece(G.currentPlayer, m.pieceIdx); return; }
+    if (pos === -1) {
+      // HOME_POSITIONS الآن بإحداثيات عائمة (مثل 1.5, 1.5)
+      // نتحقق إذا كان الكليك داخل مسافة 1 خلية من المركز (أي داخل الـ 2x2 slot)
+      [pRow, pCol] = HOME_POSITIONS[pl.color][m.pieceIdx];
+      if (Math.abs(row - pRow) <= 1.0 && Math.abs(col - pCol) <= 1.0) {
+        movePiece(G.currentPlayer, m.pieceIdx);
+        return;
+      }
+    } else {
+      [pRow, pCol] = PATHS[pl.color][pos];
+      // للخلايا العادية: تقريب للمقارنة
+      if (Math.floor(row) === pRow && Math.floor(col) === pCol) {
+        movePiece(G.currentPlayer, m.pieceIdx);
+        return;
+      }
+    }
   }
 }
 

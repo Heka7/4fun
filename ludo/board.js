@@ -384,22 +384,16 @@ function drawCenter(cs) {
 
 /* ── القطعة ── */
 function drawPiece(r, c, color, stackIdx, stackTotal, pieceNum, cs) {
-  const spread = cs * 0.18;
-  const offsets = [
-    {x:-spread, y:-spread}, {x:spread, y:-spread},
-    {x:-spread,  y:spread}, {x:spread,  y:spread}
-  ];
-  const off = stackTotal <= 1 ? {x:0, y:0} : offsets[stackIdx % 4];
-
-  const x = c * cs + cs/2 + off.x;
-  const y = r * cs + cs/2 + off.y;
-  const rad = cs * (stackTotal > 1 ? 0.28 : 0.36);
+  // r,c يمكن أن تكون float بالنسبة لمربعات البيت
+  const x = c * cs;
+  const y = r * cs;
+  const rad = cs * (stackTotal > 1 ? 0.28 : 0.4);
   const col = COLORS[color];
 
   // ظل
   ctx.beginPath();
-  ctx.arc(x + 1.5, y + 2, rad, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.arc(x + 2, y + 2.5, rad, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.28)';
   ctx.fill();
 
   // جسم القطعة
@@ -407,31 +401,55 @@ function drawPiece(r, c, color, stackIdx, stackTotal, pieceNum, cs) {
   ctx.arc(x, y, rad, 0, Math.PI * 2);
   ctx.fillStyle = col.bg;
   ctx.fill();
-  ctx.strokeStyle = '#000';
+  ctx.strokeStyle = 'rgba(0,0,0,0.6)';
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // بريق صغير
+  // حلقة داخلية
+  ctx.beginPath();
+  ctx.arc(x, y, rad * 0.62, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // بريق
   ctx.beginPath();
   ctx.arc(x - rad * 0.3, y - rad * 0.3, rad * 0.28, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
   ctx.fill();
 
   // رقم
   ctx.fillStyle = col.text;
-  ctx.font = `bold ${Math.round(rad * 0.9)}px Arial`;
+  ctx.font = `bold ${Math.round(rad * 0.95)}px Arial`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(pieceNum + 1, x, y + 1);
+}
+
+/* ── roundRect helper ── */
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
 /* ── النقر على اللوحة ── */
 function onBoardClick(e) {
   if (!window.G) return;
   const rect = canvas.getBoundingClientRect();
-  const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const y = (e.clientY - rect.top) * (canvas.height / rect.height);
-  window.handleBoardClick(Math.floor(y / cellSize), Math.floor(x / cellSize));
+  // استخدم الإحداثيات الحقيقية للكانفاس
+  const px = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const py = (e.clientY - rect.top) * (canvas.height / rect.height);
+  // الصف والعمود كأرقام عائمة (float) للتوافق مع HOME_POSITIONS
+  window.handleBoardClick(py / cellSize, px / cellSize);
 }
 
 /* ── النرد (SVG) ── */
