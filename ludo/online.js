@@ -51,6 +51,13 @@ function createRoom() {
   });
 }
 
+function showLobby(code) {
+  document.getElementById('lobby-code').textContent = code;
+  document.getElementById('start-online-btn').classList.add('hidden');
+  if (isHost) document.getElementById('start-online-btn').classList.remove('hidden');
+  showScreen('screen-lobby');
+}
+
 /* ===== الانضمام لغرفة ===== */
 function joinRoom() {
   const name = getPlayerName();
