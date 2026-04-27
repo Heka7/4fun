@@ -151,10 +151,9 @@ function drawBoard() {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Board background
-  ctx.fillStyle = '#e8eef7';
-  roundRect(ctx, 0, 0, canvas.width, canvas.height, 12);
-  ctx.fill();
+  // Board background (white)
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Draw all cells
   for (let r = 0; r < 15; r++)
@@ -163,6 +162,11 @@ function drawBoard() {
 
   // Center triangles
   drawCenter(cs);
+  
+  // Board border
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(1.5, 1.5, canvas.width - 3, canvas.height - 3);
 
   // Pieces
   if (G) {
@@ -214,7 +218,7 @@ function drawBoard() {
         // Pulsing ring
         ctx.beginPath();
         ctx.arc(x, y, cs * 0.46, 0, Math.PI * 2);
-        ctx.strokeStyle = '#fbbf24';
+        ctx.strokeStyle = '#000';
         ctx.lineWidth = Math.max(2, cs * 0.055);
         ctx.setLineDash([cs * 0.18, cs * 0.12]);
         ctx.stroke();
@@ -237,100 +241,121 @@ function getStackOffset(index, total, cs) {
 /* ─── CELL DRAW ─── */
 function drawCell(r, c, cs) {
   const x = c * cs, y = r * cs;
-  let fill = '#f0f4fc'; // default path color
+  let fill = '#f4f5f7'; // default path color
+  let drawGrid = true;
 
   // ── Home corners ──
   const isRedHome    = r <= 5 && c <= 5;
-  const isBlueHome   = r <= 5 && c >= 9;
-  const isGreenHome  = r >= 9 && c <= 5;
+  const isGreenHome  = r <= 5 && c >= 9;
+  const isBlueHome   = r >= 9 && c <= 5;
   const isYellowHome = r >= 9 && c >= 9;
 
-  // Inner safe circle area (6x6 → 4x4 circle zone)
-  const isRedInner    = r >= 1 && r <= 4 && c >= 1 && c <= 4;
-  const isBlueInner   = r >= 1 && r <= 4 && c >= 10 && c <= 13;
-  const isGreenInner  = r >= 10 && r <= 13 && c >= 1 && c <= 4;
-  const isYellowInner = r >= 10 && r <= 13 && c >= 10 && c <= 13;
-
-  if (isRedHome) {
-    fill = '#ef4444';
-    if (isRedInner) fill = '#fca5a5';
-  } else if (isBlueHome) {
-    fill = '#3b82f6';
-    if (isBlueInner) fill = '#93c5fd';
-  } else if (isGreenHome) {
-    fill = '#22c55e';
-    if (isGreenInner) fill = '#86efac';
-  } else if (isYellowHome) {
-    fill = '#eab308';
-    if (isYellowInner) fill = '#fde047';
-  }
+  let cornerColor = null;
+  if (isRedHome) { fill = COLORS.red.bg; cornerColor = 'red'; drawGrid = false; }
+  else if (isGreenHome) { fill = COLORS.green.bg; cornerColor = 'green'; drawGrid = false; }
+  else if (isBlueHome) { fill = COLORS.blue.bg; cornerColor = 'blue'; drawGrid = false; }
+  else if (isYellowHome) { fill = COLORS.yellow.bg; cornerColor = 'yellow'; drawGrid = false; }
+  
   // Colored home paths
-  else if (r >= 1 && r <= 5 && c === 7) fill = '#fecaca';  // Red column
-  else if (r === 7 && c >= 1 && c <= 5) fill = '#bbf7d0';  // Green row
-  else if (r >= 9 && r <= 13 && c === 7) fill = '#fef08a'; // Yellow column
-  else if (r === 7 && c >= 9 && c <= 13) fill = '#bfdbfe'; // Blue row
+  else if (r >= 1 && r <= 5 && c === 7) fill = COLORS.green.bg;  // Top column -> Green
+  else if (r >= 9 && r <= 13 && c === 7) fill = COLORS.blue.bg;  // Bottom column -> Blue
+  else if (r === 7 && c >= 1 && c <= 5) fill = COLORS.red.bg;    // Left row -> Red
+  else if (r === 7 && c >= 9 && c <= 13) fill = COLORS.yellow.bg;// Right row -> Yellow
+
+  // Start cells
+  if (r === 1 && c === 8) fill = COLORS.green.bg;
+  if (r === 6 && c === 1) fill = COLORS.red.bg;
+  if (r === 8 && c === 13) fill = COLORS.yellow.bg;
+  if (r === 13 && c === 6) fill = COLORS.blue.bg;
 
   ctx.fillStyle = fill;
   ctx.fillRect(x, y, cs, cs);
 
   // Grid lines
-  ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-  ctx.lineWidth = 0.5;
-  ctx.strokeRect(x + 0.5, y + 0.5, cs - 1, cs - 1);
-
-  // Home circle backdrop
-  if ((isRedHome && isRedInner) || (isBlueHome && isBlueInner) ||
-      (isGreenHome && isGreenInner) || (isYellowHome && isYellowInner)) {
-    // Will be drawn by the large oval in drawHomeArea
+  if (drawGrid) {
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, cs, cs);
+  } else {
+    if ((r === 0 && c === 0) || (r === 0 && c === 9) || (r === 9 && c === 0) || (r === 9 && c === 9)) {
+       ctx.strokeStyle = '#000';
+       ctx.lineWidth = 1.5;
+       ctx.strokeRect(x, y, 6*cs, 6*cs);
+    }
   }
 
-  // Star (safe cells) - not on corners, not center
-  const isSafe = STAR_POSITIONS.some(([sr, sc]) => sr === r && sc === c);
-  const isCenter = r >= 6 && r <= 8 && c >= 6 && c <= 8;
-  if (isSafe && !isCenter) {
-    ctx.fillStyle = 'rgba(0,0,0,0.18)';
-    ctx.font = `${Math.round(cs * 0.55)}px serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('★', x + cs / 2, y + cs / 2);
-  }
+  // Home area inner square (drawn once per 6x6 block)
+  if (r === 0 && c === 0) drawHomeArea(0, 0, 'red', cs);
+  if (r === 0 && c === 9) drawHomeArea(0, 9, 'green', cs);
+  if (r === 9 && c === 0) drawHomeArea(9, 0, 'blue', cs);
+  if (r === 9 && c === 9) drawHomeArea(9, 9, 'yellow', cs);
 
-  // Starting arrows
+  // Arrows on start cells
   const starts = {
     red:    [6, 1], green:  [1, 8],
     yellow: [8, 13], blue:  [13, 6]
   };
   Object.entries(starts).forEach(([col, [sr, sc]]) => {
     if (r !== sr || c !== sc) return;
-    const C = COLORS[col];
-    ctx.fillStyle = C.bg;
-    ctx.beginPath();
-    ctx.arc(x + cs/2, y + cs/2, cs * 0.36, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.font = `bold ${Math.round(cs * 0.38)}px sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('▶', x + cs/2, y + cs/2);
+    drawArrow(x + cs/2, y + cs/2, col, cs);
   });
-
-  // Home area inner oval (drawn once per 4x4 block)
-  if (r === 1 && c === 1) drawHomeOval(1, 1, 4, 'red',    cs);
-  if (r === 1 && c === 10) drawHomeOval(1, 10, 4, 'blue',  cs);
-  if (r === 10 && c === 1) drawHomeOval(10, 1, 4, 'green', cs);
-  if (r === 10 && c === 10) drawHomeOval(10, 10, 4,'yellow',cs);
+  
+  // Arrows on entrance cells
+  const enters = {
+    red: [7,0], green: [0,7], yellow: [7,14], blue: [14,7]
+  };
+  Object.entries(enters).forEach(([col, [er, ec]]) => {
+    if (r !== er || c !== ec) return;
+    drawArrow(x + cs/2, y + cs/2, col, cs);
+  });
 }
 
-function drawHomeOval(startR, startC, size, color, cs) {
-  const C = COLORS[color];
+function drawArrow(x, y, color, cs) {
+  // Arrow pointing right for Red, down for Green, left for Yellow, up for Blue
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  let size = cs * 0.18;
+  if (color === 'red') { 
+    ctx.moveTo(x - size, y - size); ctx.lineTo(x + size*1.5, y); ctx.lineTo(x - size, y + size);
+  } else if (color === 'green') { 
+    ctx.moveTo(x - size, y - size); ctx.lineTo(x, y + size*1.5); ctx.lineTo(x + size, y - size);
+  } else if (color === 'yellow') { 
+    ctx.moveTo(x + size, y - size); ctx.lineTo(x - size*1.5, y); ctx.lineTo(x + size, y + size);
+  } else if (color === 'blue') { 
+    ctx.moveTo(x - size, y + size); ctx.lineTo(x, y - size*1.5); ctx.lineTo(x + size, y + size);
+  }
+  ctx.fill();
+}
+
+function drawHomeArea(startR, startC, color, cs) {
+  const C = COLORS[color].bg;
   const x = startC * cs;
   const y = startR * cs;
-  const w = size * cs;
-  const h = size * cs;
-  const pad = cs * 0.18;
-
+  
+  const pad = cs * 1.2;
+  const w = 3.6 * cs;
+  
   // White card
-  ctx.fillStyle = 'rgba(255,255,255,0.82)';
-  roundRect(ctx, x + pad, y + pad, w - pad*2, h - pad*2, cs * 0.5);
-  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(x + pad, y + pad, w, w);
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + pad, y + pad, w, w);
+
+  // 4 small boxes
+  ctx.fillStyle = C;
+  const sz = cs * 1.0;
+  const inPad = cs * 0.45;
+
+  const bx = x + pad + inPad;
+  const by = y + pad + inPad;
+  const bx2 = x + pad + w - inPad - sz;
+  const by2 = y + pad + w - inPad - sz;
+
+  ctx.fillRect(bx, by, sz, sz); ctx.strokeRect(bx, by, sz, sz);
+  ctx.fillRect(bx2, by, sz, sz); ctx.strokeRect(bx2, by, sz, sz);
+  ctx.fillRect(bx, by2, sz, sz); ctx.strokeRect(bx, by2, sz, sz);
+  ctx.fillRect(bx2, by2, sz, sz); ctx.strokeRect(bx2, by2, sz, sz);
 }
 
 /* ─── CENTER ─── */
@@ -340,10 +365,10 @@ function drawCenter(cs) {
   const mx = ox + S / 2, my = oy + S / 2;
 
   const triangles = [
-    { color: '#ef4444', pts: [[ox, oy], [ox+S, oy], [mx, my]] },        // red - top
-    { color: '#22c55e', pts: [[ox, oy], [ox, oy+S], [mx, my]] },        // green - left
-    { color: '#eab308', pts: [[ox+S, oy+S], [ox, oy+S], [mx, my]] },    // yellow - bottom
-    { color: '#3b82f6', pts: [[ox+S, oy], [ox+S, oy+S], [mx, my]] }     // blue - right
+    { color: COLORS.green.bg, pts: [[ox, oy], [ox+S, oy], [mx, my]] },        // top - green
+    { color: COLORS.red.bg,   pts: [[ox, oy], [ox, oy+S], [mx, my]] },        // left - red
+    { color: COLORS.blue.bg,  pts: [[ox, oy+S], [ox+S, oy+S], [mx, my]] },    // bottom - blue
+    { color: COLORS.yellow.bg,pts: [[ox+S, oy], [ox+S, oy+S], [mx, my]] }     // right - yellow
   ];
 
   triangles.forEach(t => {
@@ -354,15 +379,10 @@ function drawCenter(cs) {
     ctx.closePath();
     ctx.fillStyle = t.color;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.strokeStyle = '#000';
     ctx.lineWidth = 1;
     ctx.stroke();
   });
-
-  // Center crown
-  ctx.font = `${Math.round(cs * 1.1)}px serif`;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('👑', mx, my);
 }
 
 /* ─── PIECE ─── */
@@ -370,50 +390,29 @@ function drawPiece(r, c, color, G, playerIdx, pieceIdx, offset = { x: 0, y: 0 })
   const cs = cellSize;
   const x = c * cs + cs / 2 + offset.x;
   const y = r * cs + cs / 2 + offset.y;
-  const radius = cs * 0.36;
+  const radius = cs * 0.35;
   const col = COLORS[color];
 
-  // Drop shadow
-  ctx.beginPath();
-  ctx.arc(x + 1.5, y + 2.5, radius, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.fill();
-
-  // Body gradient
-  const grad = ctx.createRadialGradient(
-    x - radius * 0.35, y - radius * 0.35, radius * 0.05,
-    x, y, radius
-  );
-  grad.addColorStop(0, col.light);
-  grad.addColorStop(0.6, col.bg);
-  grad.addColorStop(1, col.dark);
-
+  // Flat Piece
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, Math.PI * 2);
-  ctx.fillStyle = grad;
+  ctx.fillStyle = col.bg;
   ctx.fill();
 
-  // Rim
-  ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
   ctx.stroke();
 
   // Inner ring
   ctx.beginPath();
-  ctx.arc(x, y, radius * 0.56, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+  ctx.arc(x, y, radius * 0.6, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Shine
-  ctx.beginPath();
-  ctx.arc(x - radius * 0.28, y - radius * 0.28, radius * 0.22, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,255,255,0.55)';
-  ctx.fill();
-
   // Number
   ctx.fillStyle = col.text;
-  ctx.font = `900 ${Math.round(radius * 0.9)}px Cairo, sans-serif`;
+  ctx.font = `bold ${Math.round(radius * 0.9)}px Arial, sans-serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(pieceIdx + 1, x, y + 1);
 }
