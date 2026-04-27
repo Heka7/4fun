@@ -124,260 +124,352 @@ function initBoard() {
   canvas.addEventListener('touchend', e => {
     e.preventDefault();
     const t = e.changedTouches[0];
-    const rect = canvas.getBoundingClientRect();
-    onBoardClick({ clientX: t.clientX, clientY: t.clientY, rect });
+    onBoardClick({ clientX: t.clientX, clientY: t.clientY });
   }, { passive: false });
 }
 
 function resizeBoard() {
   const wrapper = document.getElementById('board-wrapper');
-  const maxW = Math.min(wrapper.clientWidth - 16, wrapper.clientHeight - 16, 520);
-  const size = Math.max(maxW, 280);
+  if (!wrapper) return;
+  const available = Math.min(
+    wrapper.clientWidth  - 12,
+    wrapper.clientHeight - 12,
+    560
+  );
+  const size = Math.max(available, 270);
   cellSize = Math.floor(size / 15);
-  canvas.width = cellSize * 15;
+  canvas.width  = cellSize * 15;
   canvas.height = cellSize * 15;
   if (window.G) drawBoard();
 }
 
+/* ─── MAIN DRAW ─── */
 function drawBoard() {
-  if (!ctx) return;
+  if (!ctx || !cellSize) return;
   const G = window.G;
   const cs = cellSize;
-  const w = cs * 15;
-  const h = cs * 15;
 
-  ctx.clearRect(0, 0, w, h);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // خلفية
-  ctx.fillStyle = '#1e2a3f';
-  ctx.fillRect(0, 0, w, h);
+  // Board background
+  ctx.fillStyle = '#e8eef7';
+  roundRect(ctx, 0, 0, canvas.width, canvas.height, 12);
+  ctx.fill();
 
-  // رسم كل خلية
-  for (let r = 0; r < 15; r++) {
-    for (let c = 0; c < 15; c++) {
+  // Draw all cells
+  for (let r = 0; r < 15; r++)
+    for (let c = 0; c < 15; c++)
       drawCell(r, c, cs);
-    }
-  }
 
-  // رسم القطع
+  // Center triangles
+  drawCenter(cs);
+
+  // Pieces
   if (G) {
+    // collect pieces per grid cell to offset stacked ones
+    const cellMap = {};
     G.players.forEach((pl, pi) => {
       pl.pieces.forEach((pos, idx) => {
+        if (pos >= 57) return;
+        let key;
         if (pos === -1) {
-          // في البيت
           const hp = HOME_POSITIONS[pl.color][idx];
-          drawPiece(hp[0], hp[1], pl.color, false, G, pi, idx);
-        } else if (pos >= 57) {
-          // وصلت للمنزل - لا ترسم
+          key = `${hp[0]}_${hp[1]}`;
         } else {
-          const path = PATHS[pl.color];
-          if (path[pos]) {
-            const [gr, gc] = path[pos];
-            drawPiece(gr, gc, pl.color, pos >= 51, G, pi, idx);
-          }
+          const cell = PATHS[pl.color][pos];
+          if (!cell) return;
+          key = `${cell[0]}_${cell[1]}`;
         }
+        if (!cellMap[key]) cellMap[key] = [];
+        cellMap[key].push({ pl, pi, pos, idx });
       });
     });
-  }
 
-  // رسم تمييز القطع القابلة للتحريك
-  if (G && G.movablePieces && G.movablePieces.length > 0) {
-    G.movablePieces.forEach(({ playerIdx, pieceIdx }) => {
-      if (playerIdx !== G.currentPlayer) return;
-      const pl = G.players[playerIdx];
-      const pos = pl.pieces[pieceIdx];
-      let gr, gc;
-      if (pos === -1) {
-        [gr, gc] = HOME_POSITIONS[pl.color][pieceIdx];
-      } else {
-        [gr, gc] = PATHS[pl.color][pos];
-      }
-      const x = gc * cs + cs / 2;
-      const y = gr * cs + cs / 2;
-      ctx.beginPath();
-      ctx.arc(x, y, cs * 0.45, 0, Math.PI * 2);
-      ctx.strokeStyle = '#fbbf24';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([4, 3]);
-      ctx.stroke();
-      ctx.setLineDash([]);
+    // Draw pieces with stacking offset
+    Object.values(cellMap).forEach(group => {
+      group.forEach((item, gi) => {
+        const { pl, pi, pos, idx } = item;
+        let gr, gc;
+        if (pos === -1) {
+          [gr, gc] = HOME_POSITIONS[pl.color][idx];
+        } else {
+          [gr, gc] = PATHS[pl.color][pos];
+        }
+        const offset = getStackOffset(gi, group.length, cs);
+        drawPiece(gr, gc, pl.color, G, pi, idx, offset);
+      });
     });
-  }
 
-  // رسم المركز (المثلثات)
-  drawCenter(cs);
+    // Movable piece highlights
+    if (G.movablePieces && G.movablePieces.length > 0) {
+      G.movablePieces.forEach(({ playerIdx, pieceIdx }) => {
+        if (playerIdx !== G.currentPlayer) return;
+        const pl = G.players[playerIdx];
+        const pos = pl.pieces[pieceIdx];
+        let gr, gc;
+        if (pos === -1) [gr, gc] = HOME_POSITIONS[pl.color][pieceIdx];
+        else { const cell = PATHS[pl.color][pos]; if (!cell) return; [gr, gc] = cell; }
+        const x = gc * cs + cs / 2;
+        const y = gr * cs + cs / 2;
+        // Pulsing ring
+        ctx.beginPath();
+        ctx.arc(x, y, cs * 0.46, 0, Math.PI * 2);
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = Math.max(2, cs * 0.055);
+        ctx.setLineDash([cs * 0.18, cs * 0.12]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      });
+    }
+  }
 }
 
+function getStackOffset(index, total, cs) {
+  if (total === 1) return { x: 0, y: 0 };
+  const spread = cs * 0.22;
+  const positions = [
+    { x: -spread, y: -spread }, { x: spread, y: -spread },
+    { x: -spread, y:  spread }, { x: spread, y:  spread }
+  ];
+  return positions[index % 4] || { x: 0, y: 0 };
+}
+
+/* ─── CELL DRAW ─── */
 function drawCell(r, c, cs) {
-  const x = c * cs;
-  const y = r * cs;
+  const x = c * cs, y = r * cs;
+  let fill = '#f0f4fc'; // default path color
 
-  // تحديد لون الخلية
-  let fillColor = '#f1f5f9';
+  // ── Home corners ──
+  const isRedHome    = r <= 5 && c <= 5;
+  const isBlueHome   = r <= 5 && c >= 9;
+  const isGreenHome  = r >= 9 && c <= 5;
+  const isYellowHome = r >= 9 && c >= 9;
 
-  // الأركان الملونة (بيوت اللاعبين)
-  if (r <= 5 && c <= 5) fillColor = COLORS.red.bg;
-  else if (r <= 5 && c >= 9) fillColor = COLORS.blue.bg;
-  else if (r >= 9 && c <= 5) fillColor = COLORS.green.bg;
-  else if (r >= 9 && c >= 9) fillColor = COLORS.yellow.bg;
-  // ممرات ملونة
-  else if (r >= 1 && r <= 5 && c === 7) fillColor = COLORS.red.light;   // ممر أحمر
-  else if (r === 7 && c >= 1 && c <= 5) fillColor = COLORS.green.light; // ممر أخضر
-  else if (r >= 9 && r <= 13 && c === 7) fillColor = COLORS.yellow.light;// ممر أصفر
-  else if (r === 7 && c >= 9 && c <= 13) fillColor = COLORS.blue.light; // ممر أزرق
+  // Inner safe circle area (6x6 → 4x4 circle zone)
+  const isRedInner    = r >= 1 && r <= 4 && c >= 1 && c <= 4;
+  const isBlueInner   = r >= 1 && r <= 4 && c >= 10 && c <= 13;
+  const isGreenInner  = r >= 10 && r <= 13 && c >= 1 && c <= 4;
+  const isYellowInner = r >= 10 && r <= 13 && c >= 10 && c <= 13;
 
-  ctx.fillStyle = fillColor;
+  if (isRedHome) {
+    fill = '#ef4444';
+    if (isRedInner) fill = '#fca5a5';
+  } else if (isBlueHome) {
+    fill = '#3b82f6';
+    if (isBlueInner) fill = '#93c5fd';
+  } else if (isGreenHome) {
+    fill = '#22c55e';
+    if (isGreenInner) fill = '#86efac';
+  } else if (isYellowHome) {
+    fill = '#eab308';
+    if (isYellowInner) fill = '#fde047';
+  }
+  // Colored home paths
+  else if (r >= 1 && r <= 5 && c === 7) fill = '#fecaca';  // Red column
+  else if (r === 7 && c >= 1 && c <= 5) fill = '#bbf7d0';  // Green row
+  else if (r >= 9 && r <= 13 && c === 7) fill = '#fef08a'; // Yellow column
+  else if (r === 7 && c >= 9 && c <= 13) fill = '#bfdbfe'; // Blue row
+
+  ctx.fillStyle = fill;
   ctx.fillRect(x, y, cs, cs);
 
-  // خط الشبكة
-  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+  // Grid lines
+  ctx.strokeStyle = 'rgba(0,0,0,0.1)';
   ctx.lineWidth = 0.5;
-  ctx.strokeRect(x, y, cs, cs);
+  ctx.strokeRect(x + 0.5, y + 0.5, cs - 1, cs - 1);
 
-  // النجوم (خلايا الحماية)
+  // Home circle backdrop
+  if ((isRedHome && isRedInner) || (isBlueHome && isBlueInner) ||
+      (isGreenHome && isGreenInner) || (isYellowHome && isYellowInner)) {
+    // Will be drawn by the large oval in drawHomeArea
+  }
+
+  // Star (safe cells) - not on corners, not center
   const isSafe = STAR_POSITIONS.some(([sr, sc]) => sr === r && sc === c);
-  if (isSafe && !(r >= 6 && r <= 8 && c >= 6 && c <= 8)) {
-    ctx.fillStyle = 'rgba(0,0,0,0.12)';
-    ctx.font = `${cs * 0.55}px serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+  const isCenter = r >= 6 && r <= 8 && c >= 6 && c <= 8;
+  if (isSafe && !isCenter) {
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.font = `${Math.round(cs * 0.55)}px serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('★', x + cs / 2, y + cs / 2);
   }
 
-  // نقطة البداية لكل لون
-  const starts = { red: [6,1], green: [1,8], yellow: [8,13], blue: [13,6] };
+  // Starting arrows
+  const starts = {
+    red:    [6, 1], green:  [1, 8],
+    yellow: [8, 13], blue:  [13, 6]
+  };
   Object.entries(starts).forEach(([col, [sr, sc]]) => {
-    if (r === sr && c === sc) {
-      ctx.fillStyle = COLORS[col].bg;
-      ctx.beginPath();
-      ctx.arc(x + cs/2, y + cs/2, cs*0.35, 0, Math.PI*2);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.font = `bold ${cs*0.4}px serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('▶', x + cs/2, y + cs/2);
-    }
+    if (r !== sr || c !== sc) return;
+    const C = COLORS[col];
+    ctx.fillStyle = C.bg;
+    ctx.beginPath();
+    ctx.arc(x + cs/2, y + cs/2, cs * 0.36, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.round(cs * 0.38)}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('▶', x + cs/2, y + cs/2);
   });
+
+  // Home area inner oval (drawn once per 4x4 block)
+  if (r === 1 && c === 1) drawHomeOval(1, 1, 4, 'red',    cs);
+  if (r === 1 && c === 10) drawHomeOval(1, 10, 4, 'blue',  cs);
+  if (r === 10 && c === 1) drawHomeOval(10, 1, 4, 'green', cs);
+  if (r === 10 && c === 10) drawHomeOval(10, 10, 4,'yellow',cs);
 }
 
-function drawCenter(cs) {
-  const cx = 7 * cs;
-  const cy = 7 * cs;
-  const s = cs * 3;
+function drawHomeOval(startR, startC, size, color, cs) {
+  const C = COLORS[color];
+  const x = startC * cs;
+  const y = startR * cs;
+  const w = size * cs;
+  const h = size * cs;
+  const pad = cs * 0.18;
 
-  // رسم 4 مثلثات ملونة
+  // White card
+  ctx.fillStyle = 'rgba(255,255,255,0.82)';
+  roundRect(ctx, x + pad, y + pad, w - pad*2, h - pad*2, cs * 0.5);
+  ctx.fill();
+}
+
+/* ─── CENTER ─── */
+function drawCenter(cs) {
+  const ox = 6 * cs, oy = 6 * cs;
+  const S  = 3 * cs;
+  const mx = ox + S / 2, my = oy + S / 2;
+
   const triangles = [
-    { color: COLORS.red.bg,    points: [[cx,cy],[cx+s,cy],[cx+s/2,cy+s/2]] },
-    { color: COLORS.green.bg,  points: [[cx,cy],[cx,cy+s],[cx+s/2,cy+s/2]] },
-    { color: COLORS.yellow.bg, points: [[cx+s,cy+s],[cx,cy+s],[cx+s/2,cy+s/2]] },
-    { color: COLORS.blue.bg,   points: [[cx+s,cy],[cx+s,cy+s],[cx+s/2,cy+s/2]] }
+    { color: '#ef4444', pts: [[ox, oy], [ox+S, oy], [mx, my]] },        // red - top
+    { color: '#22c55e', pts: [[ox, oy], [ox, oy+S], [mx, my]] },        // green - left
+    { color: '#eab308', pts: [[ox+S, oy+S], [ox, oy+S], [mx, my]] },    // yellow - bottom
+    { color: '#3b82f6', pts: [[ox+S, oy], [ox+S, oy+S], [mx, my]] }     // blue - right
   ];
 
   triangles.forEach(t => {
     ctx.beginPath();
-    ctx.moveTo(t.points[0][0], t.points[0][1]);
-    ctx.lineTo(t.points[1][0], t.points[1][1]);
-    ctx.lineTo(t.points[2][0], t.points[2][1]);
+    ctx.moveTo(t.pts[0][0], t.pts[0][1]);
+    ctx.lineTo(t.pts[1][0], t.pts[1][1]);
+    ctx.lineTo(t.pts[2][0], t.pts[2][1]);
     ctx.closePath();
     ctx.fillStyle = t.color;
     ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
   });
 
-  // تاج في المنتصف
-  ctx.font = `${cs * 0.9}px serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('👑', cx + s/2, cy + s/2);
+  // Center crown
+  ctx.font = `${Math.round(cs * 1.1)}px serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('👑', mx, my);
 }
 
-function drawPiece(r, c, color, inHome, G, playerIdx, pieceIdx) {
+/* ─── PIECE ─── */
+function drawPiece(r, c, color, G, playerIdx, pieceIdx, offset = { x: 0, y: 0 }) {
   const cs = cellSize;
-  const x = c * cs + cs / 2;
-  const y = r * cs + cs / 2;
-  const radius = cs * 0.38;
+  const x = c * cs + cs / 2 + offset.x;
+  const y = r * cs + cs / 2 + offset.y;
+  const radius = cs * 0.36;
+  const col = COLORS[color];
 
-  // ظل
+  // Drop shadow
   ctx.beginPath();
-  ctx.arc(x + 1, y + 2, radius, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.arc(x + 1.5, y + 2.5, radius, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
   ctx.fill();
 
-  // الجسم
+  // Body gradient
+  const grad = ctx.createRadialGradient(
+    x - radius * 0.35, y - radius * 0.35, radius * 0.05,
+    x, y, radius
+  );
+  grad.addColorStop(0, col.light);
+  grad.addColorStop(0.6, col.bg);
+  grad.addColorStop(1, col.dark);
+
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, Math.PI * 2);
-  const col = COLORS[color];
-  const grad = ctx.createRadialGradient(x - radius*0.3, y - radius*0.3, 0, x, y, radius);
-  grad.addColorStop(0, col.light);
-  grad.addColorStop(1, col.dark);
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // حافة
-  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+  // Rim
+  ctx.strokeStyle = 'rgba(0,0,0,0.25)';
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // حلقة داخلية
+  // Inner ring
   ctx.beginPath();
-  ctx.arc(x, y, radius * 0.55, 0, Math.PI * 2);
-  ctx.strokeStyle = col.text === '#fff' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)';
+  ctx.arc(x, y, radius * 0.56, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // رقم القطعة (صغير)
+  // Shine
+  ctx.beginPath();
+  ctx.arc(x - radius * 0.28, y - radius * 0.28, radius * 0.22, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.fill();
+
+  // Number
   ctx.fillStyle = col.text;
-  ctx.font = `bold ${radius * 0.8}px Cairo, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(pieceIdx + 1, x, y);
+  ctx.font = `900 ${Math.round(radius * 0.9)}px Cairo, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(pieceIdx + 1, x, y + 1);
+}
+
+/* ─── UTILITIES ─── */
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
 function onBoardClick(e) {
   if (!window.G) return;
   const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+  const scaleX = canvas.width  / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top)  * scaleY;
   const col = Math.floor(x / cellSize);
   const row = Math.floor(y / cellSize);
   window.handleBoardClick(row, col);
 }
 
-function highlightPiece(r, c) {
-  const cs = cellSize;
-  const x = c * cs + cs / 2;
-  const y = r * cs + cs / 2;
-  ctx.beginPath();
-  ctx.arc(x, y, cs * 0.48, 0, Math.PI * 2);
-  ctx.strokeStyle = '#fbbf24';
-  ctx.lineWidth = 3;
-  ctx.setLineDash([5, 3]);
-  ctx.stroke();
-  ctx.setLineDash([]);
-}
-
-// أيقونة النرد بالنقط
+/* ─── DICE FACE ─── */
 const DICE_DOTS = {
   1: [[0.5,0.5]],
-  2: [[0.25,0.25],[0.75,0.75]],
-  3: [[0.25,0.25],[0.5,0.5],[0.75,0.75]],
-  4: [[0.25,0.25],[0.75,0.25],[0.25,0.75],[0.75,0.75]],
-  5: [[0.25,0.25],[0.75,0.25],[0.5,0.5],[0.25,0.75],[0.75,0.75]],
-  6: [[0.25,0.25],[0.75,0.25],[0.25,0.5],[0.75,0.5],[0.25,0.75],[0.75,0.75]]
+  2: [[0.27,0.27],[0.73,0.73]],
+  3: [[0.27,0.27],[0.5,0.5],[0.73,0.73]],
+  4: [[0.27,0.27],[0.73,0.27],[0.27,0.73],[0.73,0.73]],
+  5: [[0.27,0.27],[0.73,0.27],[0.5,0.5],[0.27,0.73],[0.73,0.73]],
+  6: [[0.27,0.22],[0.73,0.22],[0.27,0.5],[0.73,0.5],[0.27,0.78],[0.73,0.78]]
 };
 
 function renderDiceFace(n) {
   const el = document.getElementById('dice-face');
+  if (!el) return;
   if (!n || n === 0) { el.innerHTML = '🎲'; return; }
   const dots = DICE_DOTS[n];
   if (!dots) { el.textContent = n; return; }
-  const size = 56;
-  const r = 5;
-  let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">`;
-  svg += `<rect width="${size}" height="${size}" rx="8" fill="white"/>`;
-  dots.forEach(([cx, cy]) => {
-    svg += `<circle cx="${cx*size}" cy="${cy*size}" r="${r}" fill="#1a1a2e"/>`;
+  const sz = 58, dr = Math.round(sz * 0.09);
+  let svg = `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<rect width="${sz}" height="${sz}" rx="10" fill="white"/>`;
+  dots.forEach(([cx,cy]) => {
+    svg += `<circle cx="${Math.round(cx*sz)}" cy="${Math.round(cy*sz)}" r="${dr}" fill="#1e293b"/>`;
   });
   svg += '</svg>';
   el.innerHTML = svg;
 }
+
+
+
