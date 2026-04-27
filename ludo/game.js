@@ -149,17 +149,22 @@ function updateTimerUI() {
 function handleTimerExpiration() {
   const G = window.G;
   if (!G || G.gameOver) return;
-  
-  // إذا انتهى الوقت والبوت يلعب مكانك
+
   const pl = G.players[G.currentPlayer];
   addLog(`انتهى وقت ${pl.name}! البوت سيلعب.`);
-  
-  // تحويل مؤقت لبوت للعب الدور الحالي
-  const wasHuman = pl.isHuman;
-  pl.isHuman = false; 
+
+  // تحويل مؤقت لبوت
+  pl.isHuman = false;
+  pl._botReplace = true; // علامة: البوت يلعب بدلاً عنه (offline)
+
+  // لو وضع أونلاين: حدث الحالة على Firebase
+  if (G.mode === 'online' && onlineRoom) {
+    db.ref('ludo_rooms/' + onlineRoom + '/gameState/players/' + G.currentPlayer + '/isHuman').set(false);
+    db.ref('ludo_rooms/' + onlineRoom + '/gameState/players/' + G.currentPlayer + '/_botReplace').set(true);
+  }
+
+  updateReclaimBtn();
   doAiTurn();
-  // إعادة الخاصية بعد الحركة (سيتم ذلك في doAiTurn)
-  pl._shouldReturnHuman = wasHuman;
 }
 
 /* ===== النرد ===== */
@@ -341,12 +346,12 @@ function doAiTurn() {
   setTimeout(() => {
     if (G.movablePieces.length === 0) { nextTurn(false); return; }
     const pIdx = aiChoosePiece(G, G.currentPlayer, dice);
-    const pl = G.players[G.currentPlayer];
-    if (pl._shouldReturnHuman) { pl.isHuman = true; delete pl._shouldReturnHuman; }
     if (pIdx === -1) nextTurn(false);
     else movePiece(G.currentPlayer, pIdx);
+    updateReclaimBtn(); // حافظ على الزر ظاهر إن البوت بيلعب مكان البشري
   }, 800);
 }
+
 
 function doAiMove() {
   const G = window.G;
@@ -388,6 +393,62 @@ function updateGameControls() {
   else {
     diceEl.className = 'dice-display cannot-roll';
     msgEl.textContent = isMyTurn ? (G.movablePieces.length > 0 ? 'اختار قطعة!' : '') : (G.mode==='online'?'دور خصمك...':'الكمبيوتر...');
+  }
+
+  updateReclaimBtn();
+}
+
+/* ── زر استرجاع الدور ── */
+function updateReclaimBtn() {
+  const G = window.G;
+  const btn = document.getElementById('reclaim-btn');
+  if (!btn || !G) { if(btn) btn.classList.add('hidden'); return; }
+
+  let shouldShow = false;
+
+  if (G.mode === 'offline') {
+    // أظهر لو البوت يلعب بدل اللاعب البشري (اللاعب 0)
+    const human0 = G.players[0];
+    shouldShow = !human0.isHuman && !!human0._botReplace;
+  } else if (G.mode === 'online') {
+    // أظهر لو دوري خلطه بوت
+    const myPl = G.players.find(p => p.color === G.myColor);
+    shouldShow = myPl && !myPl.isHuman && !!myPl._botReplace;
+  }
+
+  btn.classList.toggle('hidden', !shouldShow);
+}
+
+function reclaimTurn() {
+  const G = window.G;
+  if (!G) return;
+
+  if (G.mode === 'offline') {
+    // أوفلاين: أعد اللاعب البشري (دائماً اللاعب 0)
+    const pl = G.players[0];
+    pl.isHuman = true;
+    pl._botReplace = false;
+    // لو كان دوره الحالي: ابدأ من حيث توقف
+    if (G.currentPlayer === 0) {
+      addLog('عدت! دورك دلوقتي دوس النرد.');
+      startTimer();
+    } else {
+      addLog('عدت! ستلعب دورك لما يحين.');
+    }
+    updateReclaimBtn();
+    updateGameControls();
+    drawBoard();
+
+  } else if (G.mode === 'online' && onlineRoom) {
+    // أونلاين: أعلن عودتك للفايربيس
+    const mySlot = G.players.findIndex(p => p.color === G.myColor);
+    if (mySlot === -1) return;
+    db.ref('ludo_rooms/' + onlineRoom + '/gameState/players/' + mySlot).update({
+      isHuman: true,
+      _botReplace: false,
+      name: getPlayerName()
+    });
+    addLog('أعلنت عودتك! دورك سيعود لك.');
   }
 }
 
