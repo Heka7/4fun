@@ -554,7 +554,7 @@
         <div id="local-voting" class="screen card" style="text-align:center;">
             <span class="phase-badge">3️⃣ دور التصويت</span>
             <h2 id="voting-player-name">اللاعب 1</h2>
-            <p style="color:var(--text-muted); font-size:14px;">اختر من تظنه الجاسوس 🕵️</p>
+            <p id="voting-hint" style="color:var(--text-muted); font-size:14px;">اختر من تظنه الجاسوس 🕵️</p>
             <div id="local-voting-grid" class="voting-grid"></div>
             <button class="btn btn-blue" id="vote-confirm-btn"
                     onclick="window.confirmVote()" style="margin-top:16px; display:none;">تأكيد التصويت</button>
@@ -564,9 +564,10 @@
         <div id="local-spy-reveal" class="screen card" style="text-align:center;">
             <span class="phase-badge">4️⃣ الجاسوس يخمن</span>
             <div style="font-size:70px; margin:10px 0; animation:float 2s infinite ease-in-out;">🕵️</div>
-            <p style="color:var(--text-muted); font-size:15px; margin-bottom:4px;">الجاسوس هو...</p>
+            <p style="color:var(--text-muted); font-size:15px; margin-bottom:4px;" id="spy-reveal-label">الجاسوس هو...</p>
             <h2 id="spy-reveal-name" style="font-size:36px; color:#f43f5e;
                 text-shadow:0 0 20px rgba(244,63,94,0.5); margin:10px 0;"></h2>
+            <p id="spy-reveal-turn-info" style="color:#fbbf24; font-size:14px; margin-top:8px;"></p>
             <p style="color:var(--text-muted); font-size:14px; margin-top:8px;">
                 الآن عليه أن يخمن الكلمة السرية!
             </p>
@@ -581,7 +582,7 @@
         <!-- تخمين الجاسوس -->
         <div id="local-spy-guess" class="screen card" style="text-align:center;">
             <span class="phase-badge">4️⃣ الجاسوس يخمن</span>
-            <h2>🕵️ هل تعرف الكلمة؟</h2>
+            <h2 id="spy-guess-title">🕵️ هل تعرف الكلمة؟</h2>
             <p style="color:var(--text-muted); font-size:14px;">
                 اختر الكلمة الصح من بين الاختيارات دي
             </p>
@@ -720,14 +721,16 @@
         };
 
         // ============ متغيرات اللعبة المحلية ============
-        let localPlayers = [];          // [{name, role, word, emoji, vote, score, scoreReason}]
+        let localPlayers = [];
         let currentPlayerIndex = 0;
-        let localQuestionsOrder = [];   // [{askerIdx, askeeIdx}]
-        let localVotingIndex = 0;       // فهرس اللاعب الذي يصوت الآن
-        let localVotingChoices = {};    // {playerIdx: targetIdx}
-        let localSecretWord = null;     // {t, e}
+        let localQuestionsOrder = [];
+        let localVotingIndex = 0;
+        let localVotingChoices = {};
+        let localSecretWord = null;
         let localSpyIndices = [];
-        let localCurrentVoteChoice = null; // الاختيار المؤقت للتصويت
+        let localCurrentVoteChoices = []; // مصفوفة للاختيارات المتعددة
+        let localSpyGuessIndex = 0;       // أي جاسوس يخمن الآن
+        let localSpyGuessResults = [];    // نتائج كل جاسوس { spyIdx, correct }
 
         // النقاط المتراكمة عبر الجولات: { "اسم اللاعب": مجموع النقاط }
         let persistentScores = {};
@@ -915,154 +918,187 @@
         // ---- شاشة التصويت ----
         window.goToVoting = () => {
             localVotingIndex = 0;
-            localCurrentVoteChoice = null;
+            localCurrentVoteChoices = [];
             window.showVotingForPlayer(localVotingIndex);
             window.showScreen('local-voting');
         };
 
         window.showVotingForPlayer = (idx) => {
             const voter = localPlayers[idx];
+            const spyCount = localSpyIndices.length;
             document.getElementById('voting-player-name').innerText = `🗳️ ${voter.name} يصوت`;
-            localCurrentVoteChoice = null;
+            document.getElementById('voting-hint').innerText =
+                spyCount > 1
+                    ? `اختر ${spyCount} أشخاص تظنهم جواسيس 🕵️`
+                    : 'اختر من تظنه الجاسوس 🕵️';
+            localCurrentVoteChoices = [];
             document.getElementById('vote-confirm-btn').style.display = 'none';
 
             const grid = document.getElementById('local-voting-grid');
             grid.innerHTML = '';
             localPlayers.forEach((p, i) => {
-                if (i === idx) return; // لا يصوت لنفسه
+                if (i === idx) return;
                 const card = document.createElement('div');
                 card.className = 'vote-card';
                 card.id = `vote-option-${i}`;
                 card.innerHTML = `<div style="font-weight:bold; color:white;">${p.name}</div>`;
                 card.onclick = () => {
-                    // إزالة تحديد سابق
-                    document.querySelectorAll('.vote-card').forEach(c => c.classList.remove('selected'));
-                    card.classList.add('selected');
-                    localCurrentVoteChoice = i;
-                    document.getElementById('vote-confirm-btn').style.display = 'block';
+                    const already = localCurrentVoteChoices.indexOf(i);
+                    if (already !== -1) {
+                        // إلغاء التحديد
+                        localCurrentVoteChoices.splice(already, 1);
+                        card.classList.remove('selected');
+                    } else if (localCurrentVoteChoices.length < spyCount) {
+                        // إضافة اختيار
+                        localCurrentVoteChoices.push(i);
+                        card.classList.add('selected');
+                    }
+                    document.getElementById('vote-confirm-btn').style.display =
+                        localCurrentVoteChoices.length === spyCount ? 'block' : 'none';
                 };
                 grid.appendChild(card);
             });
         };
 
         window.confirmVote = () => {
-            if (localCurrentVoteChoice === null) return;
-            localVotingChoices[localVotingIndex] = localCurrentVoteChoice;
-            localPlayers[localVotingIndex].vote = localCurrentVoteChoice;
+            if (localCurrentVoteChoices.length !== localSpyIndices.length) return;
+            localVotingChoices[localVotingIndex] = [...localCurrentVoteChoices];
+            localPlayers[localVotingIndex].vote = [...localCurrentVoteChoices];
             localVotingIndex++;
             if (localVotingIndex < localPlayers.length) {
-                localCurrentVoteChoice = null;
+                localCurrentVoteChoices = [];
                 window.showVotingForPlayer(localVotingIndex);
             } else {
                 window.goToSpyGuess();
             }
         };
 
-        // ---- شاشة كشف الجاسوس (قبل التخمين) ----
+        // ---- شاشة كشف الجاسوس (قبل التخمين) - لكل جاسوس على حدة ----
         window.goToSpyGuess = () => {
-            // اعرض أسماء الجواسيس
-            const spyNames = localSpyIndices.map(i => localPlayers[i].name).join(' و ');
-            document.getElementById('spy-reveal-name').innerText = spyNames;
+            localSpyGuessIndex = 0;
+            localSpyGuessResults = [];
+            showSpyRevealFor(localSpyGuessIndex);
+        };
 
-            // عداد تنازلي 3 ثواني
+        function showSpyRevealFor(guessIdx) {
+            const spyIdx = localSpyIndices[guessIdx];
+            const spyName = localPlayers[spyIdx].name;
+            const total = localSpyIndices.length;
+
+            document.getElementById('spy-reveal-name').innerText = spyName;
+            document.getElementById('spy-reveal-label').innerText =
+                total > 1 ? `الجاسوس ${guessIdx + 1} من ${total}:` : 'الجاسوس هو...';
+            document.getElementById('spy-reveal-turn-info').innerText =
+                total > 1 ? `دور ${spyName} للتخمين` : '';
+
             let count = 3;
             const cdEl = document.getElementById('spy-reveal-countdown');
             const goBtn = document.getElementById('spy-reveal-go-btn');
             cdEl.innerText = count;
             goBtn.style.display = 'none';
-
             window.showScreen('local-spy-reveal');
 
             const cd = setInterval(() => {
                 count--;
-                if (count > 0) {
-                    cdEl.innerText = count;
-                } else {
-                    clearInterval(cd);
-                    cdEl.innerText = '';
-                    goBtn.style.display = 'block';
-                }
+                if (count > 0) { cdEl.innerText = count; }
+                else { clearInterval(cd); cdEl.innerText = ''; goBtn.style.display = 'block'; }
             }, 1000);
-        };
+        }
 
-        window.proceedToSpyGuess = () => { _doSpyGuess(); };
+        window.proceedToSpyGuess = () => { _doSpyGuess(localSpyGuessIndex); };
 
-        // ---- شاشة تخمين الجاسوس ----
-        function _doSpyGuess() {
-            // إيجاد تصنيف الكلمة الصحيحة
+        // ---- شاشة تخمين الجاسوس (لكل جاسوس على حدة) ----
+        function _doSpyGuess(guessIdx) {
+            const spyIdx = localSpyIndices[guessIdx];
+            const spyName = localPlayers[spyIdx].name;
+
             let currentCategoryWords = [];
             for (const key in wordsData) {
                 if (wordsData[key].find(w => w.t === localSecretWord.t)) {
-                    currentCategoryWords = wordsData[key];
-                    break;
+                    currentCategoryWords = wordsData[key]; break;
                 }
             }
-            // إذا لم نجد التصنيف لسبب ما، نأخذ كل الكلمات
-            if (currentCategoryWords.length === 0) {
+            if (currentCategoryWords.length === 0)
                 currentCategoryWords = Object.values(wordsData).flat();
-            }
 
-            // فلتر: لا تكرر الكلمة الصحيحة
             const pool = currentCategoryWords.filter(w => w.t !== localSecretWord.t);
-            // اختر 5 عشوائيين
-            const shuffled = pool.sort(() => Math.random() - 0.5).slice(0, 5);
-            // أضف الكلمة الصح
-            const options = [...shuffled, localSecretWord].sort(() => Math.random() - 0.5);
+            const options = [...pool.sort(() => Math.random() - 0.5).slice(0, 5), localSecretWord]
+                .sort(() => Math.random() - 0.5);
 
             const grid = document.getElementById('spy-guess-grid');
             grid.innerHTML = '';
             document.getElementById('spy-guess-result').style.display = 'none';
-
-            const spyNames = localSpyIndices.map(i => localPlayers[i].name).join(' و ');
-            document.querySelector('#local-spy-guess h2').innerText = `🕵️ ${spyNames} - هل تعرف الكلمة؟`;
+            document.getElementById('spy-guess-title').innerText =
+                localSpyIndices.length > 1
+                    ? `🕵️ ${spyName} - هل تعرف الكلمة؟`
+                    : `🕵️ هل تعرف الكلمة؟`;
 
             options.forEach(opt => {
                 const btn = document.createElement('button');
                 btn.className = 'guess-btn';
                 btn.innerText = `${opt.e} ${opt.t}`;
-                btn.onclick = () => window.spyPickedWord(opt.t, btn, grid);
+                btn.onclick = () => window.spyPickedWord(opt.t, btn, grid, guessIdx);
                 grid.appendChild(btn);
             });
 
             window.showScreen('local-spy-guess');
         }
 
-        window.spyPickedWord = (pickedWord, btn, grid) => {
-            // تعطيل كل الأزرار
+        window.spyPickedWord = (pickedWord, btn, grid, guessIdx) => {
             Array.from(grid.querySelectorAll('.guess-btn')).forEach(b => b.onclick = null);
             const correct = pickedWord === localSecretWord.t;
-            if (correct) {
-                btn.classList.add('correct');
-                // منح الجاسوس نقاط
-                localSpyIndices.forEach(i => {
-                    localPlayers[i].score += 100;
-                    localPlayers[i].scoreReason.push('عرف الكلمة +100 🎯');
-                });
-            } else {
-                btn.classList.add('wrong');
-                // أظهر الكلمة الصح
+            btn.classList.add(correct ? 'correct' : 'wrong');
+            if (!correct)
                 Array.from(grid.querySelectorAll('.guess-btn')).forEach(b => {
                     if (b.innerText.includes(localSecretWord.t)) b.classList.add('correct');
                 });
-            }
 
-            // حساب نقاط التصويت
+            localSpyGuessResults.push({ spyIdx: localSpyIndices[guessIdx], correct });
+
+            const resultDiv = document.getElementById('spy-guess-result');
+            resultDiv.style.display = 'block';
+
+            const nextGuessIdx = guessIdx + 1;
+            if (nextGuessIdx < localSpyIndices.length) {
+                // يوجد جاسوس آخر لم يخمن بعد
+                resultDiv.innerHTML = correct
+                    ? `<p style="color:#34d399; font-size:18px; font-weight:bold;">🎉 صح! الآن دور الجاسوس التالي...</p>`
+                    : `<p style="color:#f43f5e; font-size:18px; font-weight:bold;">❌ خطأ! الآن دور الجاسوس التالي...</p>`;
+                resultDiv.innerHTML += `<button class="btn btn-reveal" onclick="window._nextSpyGuess(${nextGuessIdx})" style="margin-top:12px;">التالي 🕵️</button>`;
+            } else {
+                // كل الجواسيس خمّنوا - احسب النقاط
+                _finishRound(correct);
+                resultDiv.innerHTML = correct
+                    ? `<p style="color:#34d399; font-size:20px; font-weight:bold;">🎉 الجاسوس عرف الكلمة!</p>`
+                    : `<p style="color:#f43f5e; font-size:20px; font-weight:bold;">❌ خطأ! الكلمة كانت: ${localSecretWord.e} ${localSecretWord.t}</p>`;
+                resultDiv.innerHTML += `<button class="btn btn-restart" onclick="window.showScoreboard()" style="margin-top:12px;">🏆 اعرض النقاط</button>`;
+            }
+        };
+
+        window._nextSpyGuess = (nextGuessIdx) => {
+            showSpyRevealFor(nextGuessIdx);
+        };
+
+        function _finishRound() {
+            // نقاط الجواسيس (من عرف الكلمة)
+            localSpyGuessResults.forEach(({ spyIdx, correct }) => {
+                if (correct) {
+                    localPlayers[spyIdx].score += 100;
+                    localPlayers[spyIdx].scoreReason.push('عرف الكلمة +100 🎯');
+                }
+            });
+
+            // نقاط التصويت: من صوّت لكل الجواسيس يأخذ نقاط
             localPlayers.forEach((voter, voterIdx) => {
                 if (voter.role === 'spy') return;
-                const targetIdx = voter.vote;
-                if (targetIdx !== null && localSpyIndices.includes(targetIdx)) {
+                const votes = Array.isArray(voter.vote) ? voter.vote : [voter.vote].filter(v => v !== null);
+                const allSpiesFound = localSpyIndices.every(si => votes.includes(si));
+                if (allSpiesFound) {
                     voter.score += 100;
                     voter.scoreReason.push('صوّت صح +100 ✅');
                 }
             });
-
-            const resultDiv = document.getElementById('spy-guess-result');
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = correct
-                ? `<p style="color:#34d399; font-size:20px; font-weight:bold;">🎉 الجاسوس عرف الكلمة!</p>`
-                : `<p style="color:#f43f5e; font-size:20px; font-weight:bold;">❌ خطأ! الكلمة كانت: ${localSecretWord.e} ${localSecretWord.t}</p>`;
-            resultDiv.innerHTML += `<button class="btn btn-restart" onclick="window.showScoreboard()" style="margin-top:12px;">🏆 اعرض النقاط</button>`;
-        };
+        }
 
         // ---- لوحة النقاط ----
         window.showScoreboard = () => {
