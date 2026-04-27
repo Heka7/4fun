@@ -2,21 +2,212 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ludo Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>لودو 4Fun 🎲</title>
+<link rel="icon" href="../img/i_ludo.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<h2>🎲 Ludo Pro</h2>
+<!-- شاشة القائمة الرئيسية -->
+<div id="screen-menu" class="screen active">
+  <div class="menu-container">
+    <div class="logo-area">
+      <div class="logo-dice">🎲</div>
+      <h1 class="game-title">لودو <span>4Fun</span></h1>
+      <p class="game-subtitle">العبها مع أصحابك أو ضد الكمبيوتر!</p>
+    </div>
 
-<button onclick="rollDice()">🎲 رمي النرد</button>
-<div id="dice">0</div>
+    <div id="player-name-section">
+      <div class="input-group">
+        <input type="text" id="playerNameInput" placeholder="اسمك يا بطل..." maxlength="12">
+      </div>
+    </div>
 
-<div id="board"></div>
+    <div id="welcome-name" class="welcome-name hidden"></div>
 
-<script type="module" src="main.js"></script>
+    <div class="menu-buttons">
+      <button class="menu-btn btn-offline" onclick="showOfflineSetup()">
+        <span class="btn-icon">🤖</span>
+        <div class="btn-text">
+          <span class="btn-title">لعب أوفلاين</span>
+          <span class="btn-desc">ضد الكمبيوتر</span>
+        </div>
+        <span class="btn-arrow">←</span>
+      </button>
+
+      <button class="menu-btn btn-online" onclick="showOnlineSetup()">
+        <span class="btn-icon">🌐</span>
+        <div class="btn-text">
+          <span class="btn-title">لعب أونلاين</span>
+          <span class="btn-desc">مع الأصدقاء</span>
+        </div>
+        <span class="btn-arrow">←</span>
+      </button>
+    </div>
+
+    <a href="../index.html" class="back-link">← الرئيسية</a>
+  </div>
+</div>
+
+<!-- شاشة إعداد أوفلاين -->
+<div id="screen-offline" class="screen hidden">
+  <div class="menu-container">
+    <button class="back-btn" onclick="showMenu()">← رجوع</button>
+    <h2 class="section-title">🤖 لعب أوفلاين</h2>
+
+    <div class="option-group">
+      <p class="option-label">عدد اللاعبين البشريين:</p>
+      <div class="count-selector">
+        <button class="count-btn active" data-count="1" onclick="selectCount(this)">1</button>
+        <button class="count-btn" data-count="2" onclick="selectCount(this)">2</button>
+        <button class="count-btn" data-count="3" onclick="selectCount(this)">3</button>
+        <button class="count-btn" data-count="4" onclick="selectCount(this)">4</button>
+      </div>
+      <p class="option-hint" id="count-hint">باقي اللاعبين كمبيوتر</p>
+    </div>
+
+    <div class="option-group">
+      <p class="option-label">صعوبة الكمبيوتر:</p>
+      <div class="difficulty-selector">
+        <button class="diff-btn" data-diff="easy" onclick="selectDiff(this)">سهل 😊</button>
+        <button class="diff-btn active" data-diff="medium" onclick="selectDiff(this)">متوسط 🤓</button>
+        <button class="diff-btn" data-diff="hard" onclick="selectDiff(this)">صعب 😈</button>
+      </div>
+    </div>
+
+    <div class="option-group">
+      <p class="option-label">عدد اللاعبين الكلي:</p>
+      <div class="count-selector">
+        <button class="total-btn" data-total="2" onclick="selectTotal(this)">2</button>
+        <button class="total-btn active" data-total="3" onclick="selectTotal(this)">3</button>
+        <button class="total-btn active2" data-total="4" onclick="selectTotal(this)">4</button>
+      </div>
+    </div>
+
+    <button class="start-btn" onclick="startOffline()">🎲 ابدأ اللعبة!</button>
+  </div>
+</div>
+
+<!-- شاشة إعداد أونلاين -->
+<div id="screen-online" class="screen hidden">
+  <div class="menu-container">
+    <button class="back-btn" onclick="showMenu()">← رجوع</button>
+    <h2 class="section-title">🌐 لعب أونلاين</h2>
+
+    <div class="online-options">
+      <button class="online-opt-btn" onclick="showCreateRoom()">
+        <span class="opt-icon">🏠</span>
+        <span class="opt-title">إنشاء غرفة</span>
+        <span class="opt-desc">شيل كود وادي لأصحابك</span>
+      </button>
+      <button class="online-opt-btn" onclick="showJoinRoom()">
+        <span class="opt-icon">🚪</span>
+        <span class="opt-title">انضمام لغرفة</span>
+        <span class="opt-desc">أدخل كود الغرفة</span>
+      </button>
+    </div>
+
+    <!-- إنشاء غرفة -->
+    <div id="create-room-section" class="hidden">
+      <div class="option-group">
+        <p class="option-label">عدد اللاعبين في الغرفة:</p>
+        <div class="count-selector">
+          <button class="room-size-btn" data-size="2" onclick="selectRoomSize(this)">2</button>
+          <button class="room-size-btn active" data-size="3" onclick="selectRoomSize(this)">3</button>
+          <button class="room-size-btn" data-size="4" onclick="selectRoomSize(this)">4</button>
+        </div>
+      </div>
+      <button class="start-btn" onclick="createRoom()">🏠 إنشاء الغرفة</button>
+    </div>
+
+    <!-- الانضمام -->
+    <div id="join-room-section" class="hidden">
+      <div class="input-group" style="margin-top:20px">
+        <input type="text" id="roomCodeInput" placeholder="أدخل كود الغرفة (5 أرقام)" maxlength="5" inputmode="numeric">
+      </div>
+      <button class="start-btn" onclick="joinRoom()">🚪 انضمام</button>
+    </div>
+  </div>
+</div>
+
+<!-- لوبي الانتظار -->
+<div id="screen-lobby" class="screen hidden">
+  <div class="menu-container">
+    <h2 class="section-title">⏳ انتظار اللاعبين</h2>
+    <div class="room-code-display">
+      <p>كود الغرفة:</p>
+      <div class="room-code" id="lobby-code">-----</div>
+      <button class="copy-btn" onclick="copyCode()">📋 نسخ</button>
+    </div>
+    <div class="lobby-players" id="lobby-players"></div>
+    <div class="lobby-status" id="lobby-status">في الانتظار...</div>
+    <button id="start-online-btn" class="start-btn hidden" onclick="startOnlineGame()">🎲 ابدأ اللعبة!</button>
+    <button class="cancel-btn" onclick="leaveRoom()">❌ إلغاء</button>
+  </div>
+</div>
+
+<!-- شاشة اللعبة -->
+<div id="screen-game" class="screen hidden">
+  <!-- معلومات اللاعبين -->
+  <div id="players-hud" class="players-hud"></div>
+
+  <!-- اللوحة -->
+  <div id="board-wrapper">
+    <canvas id="ludo-canvas"></canvas>
+  </div>
+
+  <!-- لوحة التحكم -->
+  <div id="controls-panel">
+    <div id="turn-indicator" class="turn-indicator"></div>
+    <div id="dice-area" class="dice-area">
+      <div id="dice-display" class="dice-display" onclick="onDiceClick()">
+        <div class="dice-face" id="dice-face">🎲</div>
+      </div>
+      <div id="dice-msg" class="dice-msg">اضغط النرد!</div>
+    </div>
+    <div id="game-log" class="game-log"></div>
+  </div>
+
+  <!-- الشات (أونلاين فقط) -->
+  <div id="chat-container" class="hidden">
+    <button id="chat-toggle-btn" onclick="toggleChat()">💬 <span id="chat-badge" class="hidden">!</span></button>
+    <div id="chat-panel" class="hidden">
+      <div class="chat-header">
+        <span>💬 الدردشة</span>
+        <button onclick="toggleChat()">✖</button>
+      </div>
+      <div id="chat-messages"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="اكتب رسالة..." maxlength="80" onkeydown="if(event.key==='Enter')sendChat()">
+        <button onclick="sendChat()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة فوز -->
+  <div id="win-overlay" class="hidden">
+    <div class="win-card">
+      <div class="win-emoji" id="win-emoji">🏆</div>
+      <h2 id="win-title">فاز!</h2>
+      <p id="win-subtitle"></p>
+      <button onclick="playAgain()" class="start-btn">🔄 العب تاني</button>
+      <button onclick="goMenu()" class="cancel-btn" style="margin-top:10px">🏠 القائمة</button>
+    </div>
+  </div>
+
+  <button class="exit-game-btn" onclick="goMenu()">🏠</button>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script src="board.js"></script>
+<script src="ai.js"></script>
+<script src="online.js"></script>
+<script src="game.js"></script>
 
 </body>
 </html>
