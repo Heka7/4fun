@@ -1,0 +1,29 @@
+body {
+  background:#1e1e1e;
+  color:white;
+  text-align:center;
+}
+
+#board{
+  display:grid;
+  grid-template-columns:repeat(15,1fr);
+  width:90vw;
+  max-width:500px;
+  margin:auto;
+}
+
+.cell{
+  border:1px solid #444;
+  aspect-ratio:1;
+}
+
+.piece{
+  width:80%;
+  height:80%;
+  border-radius:50%;
+}
+
+.red{background:red;}
+.blue{background:blue;}
+.green{background:green;}
+.yellow{background:gold;}
