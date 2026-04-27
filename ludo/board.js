@@ -65,10 +65,17 @@ const HOME_POSITIONS = {
   blue:   [[11,11],[11,13],[13,11],[13,13]]
 };
 
+// خلايا الحماية – 8 خلايا ثابتة كالمعتاد في لودو:
+// 4 نقاط بداية كل لاعب + 4 نقاط وسطى بين كل لونين
 const STAR_POSITIONS = [
-  [6,1],[8,2],[1,6],[2,8],
-  [6,11],[8,12],[11,6],[12,8],
-  [13,6],[6,13],[1,8],[8,1]
+  [6,1],  // red start
+  [1,8],  // green start
+  [13,6], // yellow start
+  [8,13], // blue start
+  [1,6],  // mid (between yellow home and red start)
+  [6,13], // mid (between red start and blue start)
+  [13,8], // mid (between green home and yellow start)
+  [8,1]   // mid (between blue start and red home)
 ];
 
 let canvas, ctx, cellSize;
@@ -126,10 +133,17 @@ function drawBoard() {
     G.players.forEach((pl) => {
       pl.pieces.forEach((pos, idx) => {
         if (pos >= 57) return;
-        let r, c;
-        if (pos === -1) [r, c] = HOME_POSITIONS[pl.color][idx];
-        else { const cell = PATHS[pl.color][pos]; if (!cell) return; [r, c] = cell; }
-        drawPiece(r, c, pl.color, idx, cs);
+        if (pos === -1) {
+          // بيت – HOME_POSITIONS تخزن مركز الـ 2x2 slot مباشرة
+          const [r, c] = HOME_POSITIONS[pl.color][idx];
+          drawPieceAt(c * cs, r * cs, pl.color, idx, cs, cs * 0.4);
+        } else {
+          // مسار – المركز = خلية + نص خلية
+          const cell = PATHS[pl.color][pos];
+          if (!cell) return;
+          const [r, c] = cell;
+          drawPieceAt(c * cs + cs * 0.5, r * cs + cs * 0.5, pl.color, idx, cs, cs * 0.38);
+        }
       });
     });
 
@@ -139,11 +153,16 @@ function drawBoard() {
         if (playerIdx !== G.currentPlayer) return;
         const pl = G.players[playerIdx];
         const pos = pl.pieces[pieceIdx];
-        let r, c;
-        if (pos === -1) [r, c] = HOME_POSITIONS[pl.color][pieceIdx];
-        else { const cell = PATHS[pl.color][pos]; if (!cell) return; [r, c] = cell; }
+        let px, py;
+        if (pos === -1) {
+          const [r, c] = HOME_POSITIONS[pl.color][pieceIdx];
+          px = c * cs; py = r * cs;
+        } else {
+          const cell = PATHS[pl.color][pos]; if (!cell) return;
+          px = cell[1] * cs + cs * 0.5; py = cell[0] * cs + cs * 0.5;
+        }
         ctx.beginPath();
-        ctx.arc(c * cs, r * cs, cs * 0.52, 0, Math.PI * 2);
+        ctx.arc(px, py, cs * 0.48, 0, Math.PI * 2);
         ctx.strokeStyle = '#FFD700';
         ctx.lineWidth = 3;
         ctx.setLineDash([6, 3]);
@@ -243,13 +262,9 @@ function drawCell(r, c, cs) {
   ctx.lineWidth = 0.5;
   ctx.strokeRect(x, y, cs, cs);
 
-  // نجمة الحماية
+  // خلية حماية – ترسم نجمة خماسية بالكانفاس
   if (STAR_POSITIONS.some(p => p[0] === r && p[1] === c) && !inCenter) {
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
-    ctx.font = `${Math.round(cs * 0.48)}px serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('★', x + cs / 2, y + cs / 2);
+    drawStarShape(x + cs * 0.5, y + cs * 0.5, cs * 0.38, cs * 0.15);
   }
 
   // الأسهم
@@ -284,6 +299,28 @@ function drawArrow(cx, cy, dir, cs) {
   ctx.fill();
 }
 
+/* ── نجمة الحماية – مضلع خماسي كاللودو الحقيقي ── */
+function drawStarShape(cx, cy, outerR, innerR) {
+  const spikes = 5;
+  const step = Math.PI / spikes;
+  let rot = -Math.PI / 2; // تبدأ من الأعلى
+
+  ctx.beginPath();
+  for (let i = 0; i < spikes * 2; i++) {
+    const r = (i % 2 === 0) ? outerR : innerR;
+    ctx.lineTo(cx + Math.cos(rot) * r, cy + Math.sin(rot) * r);
+    rot += step;
+  }
+  ctx.closePath();
+
+  // ملء أبيض بحدود داكنة – زي اللودو الحقيقي
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+}
+
 /* ── المركز ── */
 function drawCenter(cs) {
   const ox = 6 * cs, oy = 6 * cs, S = 3 * cs;
@@ -309,22 +346,18 @@ function drawCenter(cs) {
 }
 
 /* ── القطعة ── */
-function drawPiece(r, c, color, pieceNum, cs) {
-  // r,c هي مراكز الشبكة – الإحداثيات الحقيقية هي r*cs, c*cs
-  const x = c * cs;
-  const y = r * cs;
-  const rad = cs * 0.38;
+function drawPieceAt(px, py, color, pieceNum, cs, rad) {
   const col = COLORS[color];
 
   // ظل
   ctx.beginPath();
-  ctx.arc(x + 2, y + 2.5, rad, 0, Math.PI * 2);
+  ctx.arc(px + 2, py + 2.5, rad, 0, Math.PI * 2);
   ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.fill();
 
   // جسم
   ctx.beginPath();
-  ctx.arc(x, y, rad, 0, Math.PI * 2);
+  ctx.arc(px, py, rad, 0, Math.PI * 2);
   ctx.fillStyle = col.bg;
   ctx.fill();
   ctx.strokeStyle = 'rgba(0,0,0,0.6)';
@@ -333,14 +366,14 @@ function drawPiece(r, c, color, pieceNum, cs) {
 
   // حلقة داخلية
   ctx.beginPath();
-  ctx.arc(x, y, rad * 0.62, 0, Math.PI * 2);
+  ctx.arc(px, py, rad * 0.62, 0, Math.PI * 2);
   ctx.strokeStyle = 'rgba(255,255,255,0.35)';
   ctx.lineWidth = 1;
   ctx.stroke();
 
   // بريق
   ctx.beginPath();
-  ctx.arc(x - rad * 0.3, y - rad * 0.3, rad * 0.28, 0, Math.PI * 2);
+  ctx.arc(px - rad * 0.3, py - rad * 0.3, rad * 0.28, 0, Math.PI * 2);
   ctx.fillStyle = 'rgba(255,255,255,0.45)';
   ctx.fill();
 
@@ -349,7 +382,7 @@ function drawPiece(r, c, color, pieceNum, cs) {
   ctx.font = `bold ${Math.round(rad * 0.95)}px Arial`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(pieceNum + 1, x, y + 1);
+  ctx.fillText(pieceNum + 1, px, py + 1);
 }
 
 /* ── roundRect ── */

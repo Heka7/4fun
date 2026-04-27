@@ -231,25 +231,24 @@ function handleBoardClick(row, col) {
 
   for (const m of G.movablePieces) {
     const pos = pl.pieces[m.pieceIdx];
-    let pRow, pCol;
     if (pos === -1) {
-      // HOME_POSITIONS الآن بإحداثيات عائمة (مثل 1.5, 1.5)
-      // نتحقق إذا كان الكليك داخل مسافة 1 خلية من المركز (أي داخل الـ 2x2 slot)
-      [pRow, pCol] = HOME_POSITIONS[pl.color][m.pieceIdx];
-      if (Math.abs(row - pRow) <= 1.0 && Math.abs(col - pCol) <= 1.0) {
-        movePiece(G.currentPlayer, m.pieceIdx);
-        return;
+      // مربعات البيت: HOME_POSITIONS بإحداثيات مركز الـ 2x2 (int)
+      // كليك float row/col → تحقق إذا في نطاق 1 خلية
+      const [hr, hc] = HOME_POSITIONS[pl.color][m.pieceIdx];
+      if (Math.abs(row - hr) <= 1.0 && Math.abs(col - hc) <= 1.0) {
+        movePiece(G.currentPlayer, m.pieceIdx); return;
       }
     } else {
-      [pRow, pCol] = PATHS[pl.color][pos];
-      // للخلايا العادية: تقريب للمقارنة
-      if (Math.floor(row) === pRow && Math.floor(col) === pCol) {
-        movePiece(G.currentPlayer, m.pieceIdx);
-        return;
+      // خلايا المسار: تقريب بالأرضية
+      const cell = PATHS[pl.color][pos];
+      if (!cell) continue;
+      if (Math.floor(row) === cell[0] && Math.floor(col) === cell[1]) {
+        movePiece(G.currentPlayer, m.pieceIdx); return;
       }
     }
   }
 }
+
 
 function movePiece(playerIdx, pieceIdx) {
   const G = window.G;
