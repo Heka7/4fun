@@ -256,17 +256,26 @@ function rollDice() {
         G.diceRolled = false;
     }
 
-    if (G.gameOver) return;
-    if (G.animating) return;
-    if (G.diceRolled) return;
+    if (G.gameOver) {
+        showToast('اللعبة انتهت! 🏁');
+        return;
+    }
+    if (G.animating) {
+        // Silently return to avoid spamming if user clicks rapidly while rolling
+        return;
+    }
+    if (G.diceRolled) {
+        showToast('لقد رميت النرد بالفعل! حرك قطعتك الآن 👆');
+        return;
+    }
 
     const player = G.players[G.currentTurn];
-    if (player.isBot) {
-        showToast('انتظر دورك! ✋');
+    if (player && player.isBot) {
+        showToast(`انتظر دور ${player.name}! ✋`);
         return;
     }
     // Online: only let the correct player roll (use color for reliable sync)
-    if (G.mode === 'online' && player.color !== G.myColor) {
+    if (G.mode === 'online' && player && player.color !== G.myColor) {
         showToast('مش دورك! ✋');
         return;
     }
