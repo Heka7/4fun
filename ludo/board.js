@@ -246,8 +246,9 @@ function drawCell(r, c, cs) {
     // ممرات المنزل
     if (r === 7 && c >= 1 && c <= 5)  fill = COLORS.red.bg;
     if (c === 7 && r >= 1 && r <= 5)  fill = COLORS.green.bg;
-    if (r === 7 && c >= 9 && c <= 13) fill = COLORS.yellow.bg;
-    if (c === 7 && r >= 9 && r <= 13) fill = COLORS.blue.bg;
+    if (r === 7 && c >= 9 && c <= 13) fill = COLORS.blue.bg;    // ممر blue (أخضر) على اليمين ✓
+    if (c === 7 && r >= 9 && r <= 13) fill = COLORS.yellow.bg;  // ممر yellow (أصفر) في الأسفل ✓
+
 
     // خلايا البداية
     if (r === 6 && c === 1)  fill = COLORS.red.bg;

@@ -208,6 +208,7 @@ function rollDice() {
   G.movablePieces = calcMovable(G, G.currentPlayer, dice);
   updateGameControls();
   drawBoard();
+  addLog(`${G.players[G.currentPlayer].name} رمى ${dice} 🎲`);
 
   if (G.movablePieces.length === 0) {
     setTimeout(() => {
@@ -347,19 +348,28 @@ function doAiTurn() {
   const G = window.G;
   if (!G || G.gameOver || G.players[G.currentPlayer].isHuman) return;
 
-  const dice = Math.floor(Math.random() * 6) + 1;
-  G.dice = dice; G.diceRolled = true;
-  renderDiceFace(dice); playDiceSound();
-  G.movablePieces = calcMovable(G, G.currentPlayer, dice);
-  drawBoard(); updateGameControls();
+  // أظهر أنيميشن رمي النرد للبوت زي البشري
+  const diceEl = document.getElementById('dice-display');
+  diceEl.classList.add('rolling');
 
   setTimeout(() => {
-    if (G.movablePieces.length === 0) { nextTurn(false); return; }
-    const pIdx = aiChoosePiece(G, G.currentPlayer, dice);
-    if (pIdx === -1) nextTurn(false);
-    else movePiece(G.currentPlayer, pIdx);
-    updateReclaimBtn(); // حافظ على الزر ظاهر إن البوت بيلعب مكان البشري
-  }, 800);
+    diceEl.classList.remove('rolling');
+    const dice = Math.floor(Math.random() * 6) + 1;
+    G.dice = dice; G.diceRolled = true;
+    renderDiceFace(dice); playDiceSound();
+    G.movablePieces = calcMovable(G, G.currentPlayer, dice);
+    drawBoard(); updateGameControls();
+    addLog(`${G.players[G.currentPlayer].name} رمى ${dice} 🎲`);
+
+    // تأخير نص ثانية قبل الحركة
+    setTimeout(() => {
+      if (G.movablePieces.length === 0) { nextTurn(false); return; }
+      const pIdx = aiChoosePiece(G, G.currentPlayer, dice);
+      if (pIdx === -1) nextTurn(false);
+      else movePiece(G.currentPlayer, pIdx);
+      updateReclaimBtn();
+    }, 600);
+  }, 500); // مدة الأنيميشن
 }
 
 
