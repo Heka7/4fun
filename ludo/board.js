@@ -1,102 +1,70 @@
 /* ===== board.js ===== */
 
-// الألوان - تطابق الصورة المرجعية
-// TL=أزرق, TR=أحمر, BL=أصفر, BR=أخضر
 const COLORS = {
-  red:    { bg:'#1565C0', text:'#fff' },  // أزرق – TL
-  green:  { bg:'#C62828', text:'#fff' },  // أحمر – TR
-  yellow: { bg:'#F9A825', text:'#000' },  // أصفر – BL
-  blue:   { bg:'#2E7D32', text:'#fff' }   // أخضر – BR
+  red:    { bg:'#1565C0', text:'#fff' },
+  green:  { bg:'#C62828', text:'#fff' },
+  yellow: { bg:'#F9A825', text:'#000' },
+  blue:   { bg:'#2E7D32', text:'#fff' }
 };
 
 const COLOR_ORDER = ['red','green','yellow','blue'];
 
-/* مسارات اللعبة الصحيحة – 52 خطوة دوران + 5 خطوات منزل = 57 */
 const PATHS = {
-  // red (TL) يبدأ من r=6,c=1 ويدور عكس عقارب الساعة
   red: [
     [6,1],[6,2],[6,3],[6,4],[6,5],
-    [5,6],[4,6],[3,6],[2,6],[1,6],[0,6],
-    [0,7],
+    [5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],
     [0,8],[1,8],[2,8],[3,8],[4,8],[5,8],
-    [6,9],[6,10],[6,11],[6,12],[6,13],[6,14],
-    [7,14],
+    [6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],
     [8,14],[8,13],[8,12],[8,11],[8,10],[8,9],
-    [9,8],[10,8],[11,8],[12,8],[13,8],[14,8],
-    [14,7],
+    [9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],
     [14,6],[13,6],[12,6],[11,6],[10,6],[9,6],
-    [8,5],[8,4],[8,3],[8,2],[8,1],[8,0],
-    [7,0],
-    [6,0],
-    // ممر المنزل
+    [8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],[6,0],
     [7,1],[7,2],[7,3],[7,4],[7,5],[7,6]
   ],
-  // green (TR) يبدأ من r=1,c=8
   green: [
     [1,8],[2,8],[3,8],[4,8],[5,8],
-    [6,9],[6,10],[6,11],[6,12],[6,13],[6,14],
-    [7,14],
+    [6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],
     [8,14],[8,13],[8,12],[8,11],[8,10],[8,9],
-    [9,8],[10,8],[11,8],[12,8],[13,8],[14,8],
-    [14,7],
+    [9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],
     [14,6],[13,6],[12,6],[11,6],[10,6],[9,6],
-    [8,5],[8,4],[8,3],[8,2],[8,1],[8,0],
-    [7,0],
+    [8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],
     [6,0],[6,1],[6,2],[6,3],[6,4],[6,5],
-    [5,6],[4,6],[3,6],[2,6],[1,6],[0,6],
-    [0,7],
-    [0,8],
-    // ممر المنزل
+    [5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],[0,8],
     [1,7],[2,7],[3,7],[4,7],[5,7],[6,7]
   ],
-  // yellow (BL) يبدأ من r=13,c=6
   yellow: [
     [13,6],[12,6],[11,6],[10,6],[9,6],
-    [8,5],[8,4],[8,3],[8,2],[8,1],[8,0],
-    [7,0],
+    [8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],
     [6,0],[6,1],[6,2],[6,3],[6,4],[6,5],
-    [5,6],[4,6],[3,6],[2,6],[1,6],[0,6],
-    [0,7],
+    [5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],
     [0,8],[1,8],[2,8],[3,8],[4,8],[5,8],
-    [6,9],[6,10],[6,11],[6,12],[6,13],[6,14],
-    [7,14],
+    [6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],
     [8,14],[8,13],[8,12],[8,11],[8,10],[8,9],
-    [9,8],[10,8],[11,8],[12,8],[13,8],[14,8],
-    [14,7],
-    [14,6],
-    // ممر المنزل
+    [9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],[14,6],
     [13,7],[12,7],[11,7],[10,7],[9,7],[8,7]
   ],
-  // blue (BR) يبدأ من r=8,c=13
   blue: [
     [8,13],[8,12],[8,11],[8,10],[8,9],
-    [9,8],[10,8],[11,8],[12,8],[13,8],[14,8],
-    [14,7],
+    [9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],
     [14,6],[13,6],[12,6],[11,6],[10,6],[9,6],
-    [8,5],[8,4],[8,3],[8,2],[8,1],[8,0],
-    [7,0],
+    [8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],
     [6,0],[6,1],[6,2],[6,3],[6,4],[6,5],
-    [5,6],[4,6],[3,6],[2,6],[1,6],[0,6],
-    [0,7],
+    [5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],
     [0,8],[1,8],[2,8],[3,8],[4,8],[5,8],
-    [6,9],[6,10],[6,11],[6,12],[6,13],[6,14],
-    [7,14],
-    [8,14],
-    // ممر المنزل
+    [6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],[8,14],
     [7,13],[7,12],[7,11],[7,10],[7,9],[7,8]
   ]
 };
 
-// مراكز المربعات الكبيرة (4 مربعات 2×2 داخل كل ركن) – بإحداثيات عائمة
-// كل مربع يمتد خليتين في كل اتجاه، والقطعة ترسم في المركز
+// مراكز القطع في البيت – بإحداثيات شبكة صحيحة
+// كل خانة تمثل مركز مربع 2×2
 const HOME_POSITIONS = {
-  red:    [[1.5,1.5],[1.5,3.5],[3.5,1.5],[3.5,3.5]],
-  green:  [[1.5,10.5],[1.5,12.5],[3.5,10.5],[3.5,12.5]],
-  yellow: [[10.5,1.5],[10.5,3.5],[12.5,1.5],[12.5,3.5]],
-  blue:   [[10.5,10.5],[10.5,12.5],[12.5,10.5],[12.5,12.5]]
+  red:    [[2,2],[2,4],[4,2],[4,4]],
+  green:  [[2,11],[2,13],[4,11],[4,13]],
+  yellow: [[11,2],[11,4],[13,2],[13,4]],
+  blue:   [[11,11],[11,13],[13,11],[13,13]]
 };
 
-// خلايا الحماية (النجمة)
 const STAR_POSITIONS = [
   [6,1],[8,2],[1,6],[2,8],
   [6,11],[8,12],[11,6],[12,8],
@@ -128,61 +96,54 @@ function resizeBoard() {
   if (window.G) drawBoard();
 }
 
-/* ── رسم اللوحة الرئيسي ── */
 function drawBoard() {
   if (!ctx || !cellSize) return;
   const G = window.G;
   const cs = cellSize;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // رسم كل خلية
+  // رسم الخلايا
   for (let r = 0; r < 15; r++)
     for (let c = 0; c < 15; c++)
       drawCell(r, c, cs);
 
-  // رسم مناطق البيت (4 مربعات كبيرة)
+  // مناطق البيت (4 مربعات كبيرة)
   drawHomeAreas(cs);
 
   // المركز
   drawCenter(cs);
 
   // حدود خارجية
-  ctx.strokeStyle = '#333';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(1.5, 1.5, canvas.width - 3, canvas.height - 3);
 
   // القطع
   if (G) {
-    G.players.forEach((pl, pi) => {
+    G.players.forEach((pl) => {
       pl.pieces.forEach((pos, idx) => {
         if (pos >= 57) return;
-        let gr, gc;
-        if (pos === -1) {
-          [gr, gc] = HOME_POSITIONS[pl.color][idx]; // float center
-        } else {
-          const cell = PATHS[pl.color][pos];
-          if (!cell) return;
-          [gr, gc] = cell;
-        }
-        drawPiece(gr, gc, pl.color, 0, 1, idx, cs);
+        let r, c;
+        if (pos === -1) [r, c] = HOME_POSITIONS[pl.color][idx];
+        else { const cell = PATHS[pl.color][pos]; if (!cell) return; [r, c] = cell; }
+        drawPiece(r, c, pl.color, idx, cs);
       });
     });
 
-    // تمييز القطع القابلة للحركة
+    // تمييز القطع المتاحة
     if (G.movablePieces && G.movablePieces.length > 0) {
       G.movablePieces.forEach(({ playerIdx, pieceIdx }) => {
         if (playerIdx !== G.currentPlayer) return;
         const pl = G.players[playerIdx];
         const pos = pl.pieces[pieceIdx];
-        let gr, gc;
-        if (pos === -1) [gr, gc] = HOME_POSITIONS[pl.color][pieceIdx];
-        else { const cell = PATHS[pl.color][pos]; if (!cell) return; [gr, gc] = cell; }
-        const px = gc * cs, py = gr * cs;
+        let r, c;
+        if (pos === -1) [r, c] = HOME_POSITIONS[pl.color][pieceIdx];
+        else { const cell = PATHS[pl.color][pos]; if (!cell) return; [r, c] = cell; }
         ctx.beginPath();
-        ctx.arc(px, py, cs * 0.52, 0, Math.PI * 2);
+        ctx.arc(c * cs, r * cs, cs * 0.52, 0, Math.PI * 2);
         ctx.strokeStyle = '#FFD700';
         ctx.lineWidth = 3;
         ctx.setLineDash([6, 3]);
@@ -193,48 +154,47 @@ function drawBoard() {
   }
 }
 
-/* ── مناطق البيت: 4 مربعات كبيرة (2×2 خلية لكل قطعة) ── */
+/* ── منطقة البيت: 4 مربعات ملونة كبيرة ── */
 function drawHomeAreas(cs) {
+  // كل ركن: origin (r0,c0) = الخلية [0,0] في الزاوية
   const defs = [
-    { color: 'red',    innerR: 1, innerC: 1 },
-    { color: 'green',  innerR: 1, innerC: 9 },
-    { color: 'yellow', innerR: 9, innerC: 1 },
-    { color: 'blue',   innerR: 9, innerC: 9 },
+    { color: 'red',    r0: 0, c0: 0 },
+    { color: 'green',  r0: 0, c0: 9 },
+    { color: 'yellow', r0: 9, c0: 0 },
+    { color: 'blue',   r0: 9, c0: 9 },
   ];
 
-  defs.forEach(({ color, innerR, innerC }) => {
-    const col = COLORS[color];
-    const wx = innerC * cs, wy = innerR * cs;
-    const wSize = 5 * cs;
+  defs.forEach(({ color, r0, c0 }) => {
+    const C = COLORS[color];
+    // المربع الأبيض الداخلي: 4×4 خلايا تبدأ من (r0+1, c0+1)
+    const wx = (c0 + 1) * cs;
+    const wy = (r0 + 1) * cs;
+    const wSize = 4 * cs;
 
-    // المربع الأبيض الكبير
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#fff';
     ctx.fillRect(wx, wy, wSize, wSize);
     ctx.strokeStyle = '#333';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 2;
     ctx.strokeRect(wx, wy, wSize, wSize);
 
-    // 4 مربعات ملونة كبيرة (كل واحد 2×2 خلية)
-    HOME_POSITIONS[color].forEach(([slotR, slotC]) => {
-      // top-left corner of the 2×2 slot
-      const slotX = (slotC - 1) * cs;
-      const slotY = (slotR - 1) * cs;
-      const slotSize = 2 * cs;
-      const pad = cs * 0.1;
+    // 4 مربعات ملونة – كل واحد 2×2 خلية
+    [[0,0],[0,2],[2,0],[2,2]].forEach(([dr, dc]) => {
+      const pad = cs * 0.12;
+      const sx = wx + dc * cs + pad;
+      const sy = wy + dr * cs + pad;
+      const sw = 2 * cs - pad * 2;
 
-      // خلفية ملونة
-      ctx.fillStyle = col.bg;
-      roundRect(slotX + pad, slotY + pad, slotSize - pad*2, slotSize - pad*2, cs * 0.3);
+      ctx.fillStyle = C.bg;
+      roundRect(sx, sy, sw, sw, cs * 0.22);
       ctx.fill();
 
-      // ظل خفيف داخلي
-      ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+      ctx.strokeStyle = 'rgba(0,0,0,0.45)';
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // بريق داخلي
-      ctx.fillStyle = 'rgba(255,255,255,0.2)';
-      roundRect(slotX + pad + cs*0.1, slotY + pad + cs*0.1, (slotSize - pad*2)*0.55, (slotSize - pad*2)*0.35, cs*0.15);
+      // لمعة داخلية
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      roundRect(sx + sw * 0.1, sy + sw * 0.08, sw * 0.55, sw * 0.3, cs * 0.12);
       ctx.fill();
     });
   });
@@ -243,38 +203,34 @@ function drawHomeAreas(cs) {
 /* ── رسم خلية ── */
 function drawCell(r, c, cs) {
   const x = c * cs, y = r * cs;
+  const inCenter = r >= 6 && r <= 8 && c >= 6 && c <= 8;
 
-  // تحديد المنطقة
-  const inRedHome    = r <= 5 && c <= 5;
-  const inGreenHome  = r <= 5 && c >= 9;
-  const inYellowHome = r >= 9 && c <= 5;
-  const inBlueHome   = r >= 9 && c >= 9;
-  const inCenter     = r >= 6 && r <= 8 && c >= 6 && c <= 8;
+  const isRedHome    = r <= 5 && c <= 5;
+  const isGreenHome  = r <= 5 && c >= 9;
+  const isYellowHome = r >= 9 && c <= 5;
+  const isBlueHome   = r >= 9 && c >= 9;
 
-  // الركن الداخلي الأبيض (المربع الكبير بداخله 4 مربعات ملونة)
-  const inRedInner    = r >= 1 && r <= 4 && c >= 1 && c <= 4;
-  const inGreenInner  = r >= 1 && r <= 4 && c >= 10 && c <= 13;
-  const inYellowInner = r >= 10 && r <= 13 && c >= 1 && c <= 4;
-  const inBlueInner   = r >= 10 && r <= 13 && c >= 10 && c <= 13;
+  const isRedInner    = r >= 1 && r <= 4 && c >= 1 && c <= 4;
+  const isGreenInner  = r >= 1 && r <= 4 && c >= 10 && c <= 13;
+  const isYellowInner = r >= 10 && r <= 13 && c >= 1 && c <= 4;
+  const isBlueInner   = r >= 10 && r <= 13 && c >= 10 && c <= 13;
 
-  let fill = '#ffffff';
+  let fill = '#fff';
 
   if (!inCenter) {
-    if (inRedHome)    fill = COLORS.red.bg;
-    if (inGreenHome)  fill = COLORS.green.bg;
-    if (inYellowHome) fill = COLORS.yellow.bg;
-    if (inBlueHome)   fill = COLORS.blue.bg;
+    if (isRedHome)    fill = COLORS.red.bg;
+    if (isGreenHome)  fill = COLORS.green.bg;
+    if (isYellowHome) fill = COLORS.yellow.bg;
+    if (isBlueHome)   fill = COLORS.blue.bg;
+    if (isRedInner || isGreenInner || isYellowInner || isBlueInner) fill = '#fff';
 
-    // المربع الداخلي الأبيض
-    if (inRedInner || inGreenInner || inYellowInner || inBlueInner) fill = '#ffffff';
-
-    // الممرات الملونة
+    // ممرات المنزل
     if (r === 7 && c >= 1 && c <= 5)  fill = COLORS.red.bg;
     if (c === 7 && r >= 1 && r <= 5)  fill = COLORS.green.bg;
     if (r === 7 && c >= 9 && c <= 13) fill = COLORS.yellow.bg;
     if (c === 7 && r >= 9 && r <= 13) fill = COLORS.blue.bg;
 
-    // خلية البداية (أعمق لون قليلاً)
+    // خلايا البداية
     if (r === 6 && c === 1)  fill = COLORS.red.bg;
     if (r === 1 && c === 8)  fill = COLORS.green.bg;
     if (r === 13 && c === 6) fill = COLORS.yellow.bg;
@@ -283,92 +239,62 @@ function drawCell(r, c, cs) {
 
   ctx.fillStyle = fill;
   ctx.fillRect(x, y, cs, cs);
-  ctx.strokeStyle = '#555';
-  ctx.lineWidth = 0.8;
+  ctx.strokeStyle = '#888';
+  ctx.lineWidth = 0.5;
   ctx.strokeRect(x, y, cs, cs);
 
-  // المربعات الصغيرة الملونة داخل الركن الأبيض
-  const homePos = [
-    ...HOME_POSITIONS.red.map(p => ({p, color: COLORS.red.bg})),
-    ...HOME_POSITIONS.green.map(p => ({p, color: COLORS.green.bg})),
-    ...HOME_POSITIONS.yellow.map(p => ({p, color: COLORS.yellow.bg})),
-    ...HOME_POSITIONS.blue.map(p => ({p, color: COLORS.blue.bg})),
-  ];
-  homePos.forEach(({p, color}) => {
-    if (p[0] === r && p[1] === c) {
-      const pad = cs * 0.08;
-      ctx.fillStyle = color;
-      ctx.fillRect(x + pad, y + pad, cs - pad*2, cs - pad*2);
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(x + pad, y + pad, cs - pad*2, cs - pad*2);
-    }
-  });
-
-  // النجمة (خلايا الحماية)
+  // نجمة الحماية
   if (STAR_POSITIONS.some(p => p[0] === r && p[1] === c) && !inCenter) {
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.font = `${Math.round(cs * 0.5)}px serif`;
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.font = `${Math.round(cs * 0.48)}px serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('★', x + cs/2, y + cs/2);
+    ctx.fillText('★', x + cs / 2, y + cs / 2);
   }
 
-  // الأسهم عند نقاط الدخول والبداية
+  // الأسهم
   const arrowMap = [
-    { r:6,  c:1,  dir:'right' }, // red start
-    { r:1,  c:8,  dir:'down'  }, // green start
-    { r:13, c:6,  dir:'up'    }, // yellow start
-    { r:8,  c:13, dir:'left'  }, // blue start
-    { r:7,  c:0,  dir:'right' }, // red entry
-    { r:0,  c:7,  dir:'down'  }, // green entry
-    { r:14, c:7,  dir:'up'    }, // yellow entry
-    { r:7,  c:14, dir:'left'  }, // blue entry
+    { r:6,  c:1,  dir:'right' },
+    { r:1,  c:8,  dir:'down'  },
+    { r:13, c:6,  dir:'up'    },
+    { r:8,  c:13, dir:'left'  },
+    { r:7,  c:0,  dir:'right' },
+    { r:0,  c:7,  dir:'down'  },
+    { r:14, c:7,  dir:'up'    },
+    { r:7,  c:14, dir:'left'  },
   ];
   const arrow = arrowMap.find(a => a.r === r && a.c === c);
-  if (arrow) drawArrow(x + cs/2, y + cs/2, arrow.dir, cs);
+  if (arrow) drawArrow(x + cs / 2, y + cs / 2, arrow.dir, cs);
 }
 
-/* ── السهم ── */
 function drawArrow(cx, cy, dir, cs) {
   const s = cs * 0.22;
   ctx.fillStyle = '#000';
   ctx.beginPath();
   if (dir === 'right') {
-    ctx.moveTo(cx - s, cy - s * 0.65);
-    ctx.lineTo(cx + s, cy);
-    ctx.lineTo(cx - s, cy + s * 0.65);
+    ctx.moveTo(cx - s, cy - s * 0.6); ctx.lineTo(cx + s, cy); ctx.lineTo(cx - s, cy + s * 0.6);
   } else if (dir === 'left') {
-    ctx.moveTo(cx + s, cy - s * 0.65);
-    ctx.lineTo(cx - s, cy);
-    ctx.lineTo(cx + s, cy + s * 0.65);
+    ctx.moveTo(cx + s, cy - s * 0.6); ctx.lineTo(cx - s, cy); ctx.lineTo(cx + s, cy + s * 0.6);
   } else if (dir === 'up') {
-    ctx.moveTo(cx - s * 0.65, cy + s);
-    ctx.lineTo(cx, cy - s);
-    ctx.lineTo(cx + s * 0.65, cy + s);
+    ctx.moveTo(cx - s * 0.6, cy + s); ctx.lineTo(cx, cy - s); ctx.lineTo(cx + s * 0.6, cy + s);
   } else if (dir === 'down') {
-    ctx.moveTo(cx - s * 0.65, cy - s);
-    ctx.lineTo(cx, cy + s);
-    ctx.lineTo(cx + s * 0.65, cy - s);
+    ctx.moveTo(cx - s * 0.6, cy - s); ctx.lineTo(cx, cy + s); ctx.lineTo(cx + s * 0.6, cy - s);
   }
   ctx.closePath();
   ctx.fill();
 }
 
-/* ── المركز (4 مثلثات) ── */
+/* ── المركز ── */
 function drawCenter(cs) {
-  const ox = 6 * cs, oy = 6 * cs;
-  const S = 3 * cs;
+  const ox = 6 * cs, oy = 6 * cs, S = 3 * cs;
   const mx = ox + S / 2, my = oy + S / 2;
 
-  const triangles = [
-    { color: COLORS.green.bg,  pts: [[ox, oy], [ox+S, oy], [mx, my]] },     // أعلى – أحمر (green منطقياً)
-    { color: COLORS.red.bg,    pts: [[ox, oy], [ox, oy+S], [mx, my]] },     // يسار – أزرق (red منطقياً)
-    { color: COLORS.blue.bg,   pts: [[ox+S, oy+S],[ox, oy+S],[mx, my]] },   // أسفل – أخضر (blue منطقياً)
-    { color: COLORS.yellow.bg, pts: [[ox+S, oy],[ox+S, oy+S],[mx, my]] },   // يمين – أصفر (yellow منطقياً)
-  ];
-
-  triangles.forEach(t => {
+  [
+    { color: COLORS.green.bg,  pts: [[ox,oy],[ox+S,oy],[mx,my]] },
+    { color: COLORS.red.bg,    pts: [[ox,oy],[ox,oy+S],[mx,my]] },
+    { color: COLORS.blue.bg,   pts: [[ox+S,oy+S],[ox,oy+S],[mx,my]] },
+    { color: COLORS.yellow.bg, pts: [[ox+S,oy],[ox+S,oy+S],[mx,my]] },
+  ].forEach(t => {
     ctx.beginPath();
     ctx.moveTo(t.pts[0][0], t.pts[0][1]);
     ctx.lineTo(t.pts[1][0], t.pts[1][1]);
@@ -383,20 +309,20 @@ function drawCenter(cs) {
 }
 
 /* ── القطعة ── */
-function drawPiece(r, c, color, stackIdx, stackTotal, pieceNum, cs) {
-  // r,c يمكن أن تكون float بالنسبة لمربعات البيت
+function drawPiece(r, c, color, pieceNum, cs) {
+  // r,c هي مراكز الشبكة – الإحداثيات الحقيقية هي r*cs, c*cs
   const x = c * cs;
   const y = r * cs;
-  const rad = cs * (stackTotal > 1 ? 0.28 : 0.4);
+  const rad = cs * 0.38;
   const col = COLORS[color];
 
   // ظل
   ctx.beginPath();
   ctx.arc(x + 2, y + 2.5, rad, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,0.28)';
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.fill();
 
-  // جسم القطعة
+  // جسم
   ctx.beginPath();
   ctx.arc(x, y, rad, 0, Math.PI * 2);
   ctx.fillStyle = col.bg;
@@ -426,7 +352,7 @@ function drawPiece(r, c, color, stackIdx, stackTotal, pieceNum, cs) {
   ctx.fillText(pieceNum + 1, x, y + 1);
 }
 
-/* ── roundRect helper ── */
+/* ── roundRect ── */
 function roundRect(x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -441,18 +367,17 @@ function roundRect(x, y, w, h, r) {
   ctx.closePath();
 }
 
-/* ── النقر على اللوحة ── */
+/* ── النقر ── */
 function onBoardClick(e) {
   if (!window.G) return;
   const rect = canvas.getBoundingClientRect();
-  // استخدم الإحداثيات الحقيقية للكانفاس
   const px = (e.clientX - rect.left) * (canvas.width / rect.width);
   const py = (e.clientY - rect.top) * (canvas.height / rect.height);
-  // الصف والعمود كأرقام عائمة (float) للتوافق مع HOME_POSITIONS
+  // float row/col للتوافق مع HOME_POSITIONS و PATHS
   window.handleBoardClick(py / cellSize, px / cellSize);
 }
 
-/* ── النرد (SVG) ── */
+/* ── النرد ── */
 const DICE_DOTS = {
   1: [[.5,.5]],
   2: [[.25,.25],[.75,.75]],
