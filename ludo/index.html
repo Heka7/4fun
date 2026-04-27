@@ -54,17 +54,6 @@
       <h2 class="section-title">🤖 لعب أوفلاين</h2>
 
       <div class="option-group">
-        <p class="option-label">عدد اللاعبين البشريين:</p>
-        <div class="count-selector">
-          <button class="count-btn active" data-count="1" onclick="selectCount(this)">1</button>
-          <button class="count-btn" data-count="2" onclick="selectCount(this)">2</button>
-          <button class="count-btn" data-count="3" onclick="selectCount(this)">3</button>
-          <button class="count-btn" data-count="4" onclick="selectCount(this)">4</button>
-        </div>
-        <p class="option-hint" id="count-hint">باقي اللاعبين كمبيوتر</p>
-      </div>
-
-      <div class="option-group">
         <p class="option-label">صعوبة الكمبيوتر:</p>
         <div class="difficulty-selector">
           <button class="diff-btn" data-diff="easy" onclick="selectDiff(this)">سهل 😊</button>
@@ -77,8 +66,8 @@
         <p class="option-label">عدد اللاعبين الكلي:</p>
         <div class="count-selector">
           <button class="total-btn" data-total="2" onclick="selectTotal(this)">2</button>
-          <button class="total-btn active" data-total="3" onclick="selectTotal(this)">3</button>
-          <button class="total-btn active2" data-total="4" onclick="selectTotal(this)">4</button>
+          <button class="total-btn" data-total="3" onclick="selectTotal(this)">3</button>
+          <button class="total-btn active" data-total="4" onclick="selectTotal(this)">4</button>
         </div>
       </div>
 
@@ -183,6 +172,8 @@
       </div>
     </div>
 
+    <div id="turn-timer" class="turn-timer hidden">30</div>
+    <button id="mute-btn" class="mute-btn" onclick="toggleMute()">🔊</button>
     <button class="exit-game-btn" onclick="goMenu()">🏠</button>
   </div>
 
