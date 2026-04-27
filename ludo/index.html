@@ -19,12 +19,6 @@
       <p class="game-subtitle">العبها مع أصحابك أو ضد الكمبيوتر!</p>
     </div>
 
-    <div id="player-name-section">
-      <div class="input-group">
-        <input type="text" id="playerNameInput" placeholder="اسمك يا بطل..." maxlength="12">
-      </div>
-    </div>
-
     <div id="welcome-name" class="welcome-name hidden"></div>
 
     <div class="menu-buttons">
@@ -96,35 +90,40 @@
     <button class="back-btn" onclick="showMenu()">← رجوع</button>
     <h2 class="section-title">🌐 لعب أونلاين</h2>
 
-    <div class="online-options">
-      <button class="online-opt-btn" onclick="showCreateRoom()">
+    <!-- زري الاختيار -->
+    <div class="online-tabs">
+      <button class="online-tab active" id="tab-create" onclick="switchOnlineTab('create')">
         <span class="opt-icon">🏠</span>
-        <span class="opt-title">إنشاء غرفة</span>
-        <span class="opt-desc">شيل كود وادي لأصحابك</span>
+        <div>
+          <span class="opt-title">إنشاء غرفة</span>
+          <span class="opt-desc">شيل كود وادي لأصحابك</span>
+        </div>
       </button>
-      <button class="online-opt-btn" onclick="showJoinRoom()">
+      <button class="online-tab" id="tab-join" onclick="switchOnlineTab('join')">
         <span class="opt-icon">🚪</span>
-        <span class="opt-title">انضمام لغرفة</span>
-        <span class="opt-desc">أدخل كود الغرفة</span>
+        <div>
+          <span class="opt-title">انضمام لغرفة</span>
+          <span class="opt-desc">أدخل كود الغرفة</span>
+        </div>
       </button>
     </div>
 
-    <!-- إنشاء غرفة -->
-    <div id="create-room-section" class="hidden">
+    <!-- قسم الإنشاء -->
+    <div id="create-room-section">
       <div class="option-group">
         <p class="option-label">عدد اللاعبين في الغرفة:</p>
         <div class="count-selector">
+          <button class="room-size-btn active" data-size="4" onclick="selectRoomSize(this)">4</button>
+          <button class="room-size-btn" data-size="3" onclick="selectRoomSize(this)">3</button>
           <button class="room-size-btn" data-size="2" onclick="selectRoomSize(this)">2</button>
-          <button class="room-size-btn active" data-size="3" onclick="selectRoomSize(this)">3</button>
-          <button class="room-size-btn" data-size="4" onclick="selectRoomSize(this)">4</button>
         </div>
       </div>
       <button class="start-btn" onclick="createRoom()">🏠 إنشاء الغرفة</button>
     </div>
 
-    <!-- الانضمام -->
+    <!-- قسم الانضمام -->
     <div id="join-room-section" class="hidden">
-      <div class="input-group" style="margin-top:20px">
+      <div class="input-group" style="margin-top:10px">
         <input type="text" id="roomCodeInput" placeholder="أدخل كود الغرفة (5 أرقام)" maxlength="5" inputmode="numeric">
       </div>
       <button class="start-btn" onclick="joinRoom()">🚪 انضمام</button>

@@ -18,7 +18,7 @@ let onlineListener = null;
 let myOnlineId = null;
 let myColorOnline = null;
 let isHost = false;
-let selectedRoomSize = 3;
+let selectedRoomSize = 4;
 let chatOpen = false;
 let unreadChat = 0;
 
@@ -301,15 +301,22 @@ function selectRoomSize(btn) {
   selectedRoomSize = parseInt(btn.dataset.size);
 }
 
-/* ===== إظهار/إخفاء أقسام الأونلاين ===== */
-function showCreateRoom() {
-  document.getElementById('create-room-section').classList.remove('hidden');
-  document.getElementById('join-room-section').classList.add('hidden');
-  document.querySelector('.online-options').classList.add('hidden');
-}
+/* ===== التبديل بين إنشاء وانضمام ===== */
+function switchOnlineTab(tab) {
+  const createSection = document.getElementById('create-room-section');
+  const joinSection   = document.getElementById('join-room-section');
+  const tabCreate = document.getElementById('tab-create');
+  const tabJoin   = document.getElementById('tab-join');
 
-function showJoinRoom() {
-  document.getElementById('join-room-section').classList.remove('hidden');
-  document.getElementById('create-room-section').classList.add('hidden');
-  document.querySelector('.online-options').classList.add('hidden');
+  if (tab === 'create') {
+    createSection.classList.remove('hidden');
+    joinSection.classList.add('hidden');
+    tabCreate.classList.add('active');
+    tabJoin.classList.remove('active');
+  } else {
+    joinSection.classList.remove('hidden');
+    createSection.classList.add('hidden');
+    tabJoin.classList.add('active');
+    tabCreate.classList.remove('active');
+  }
 }

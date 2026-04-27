@@ -254,14 +254,14 @@ input:focus { border-color: var(--accent); }
 }
 .cancel-btn:hover { color: var(--red); border-color: var(--red); }
 
-/* ====== أونلاين ====== */
-.online-options { display: flex; flex-direction: column; gap: 12px; }
+/* ====== أونلاين - تابز ====== */
+.online-tabs { display: flex; flex-direction: column; gap: 10px; }
 
-.online-opt-btn {
+.online-tab {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 18px 20px;
+  padding: 16px 20px;
   border-radius: var(--radius);
   border: 2px solid var(--border);
   background: var(--surface2);
@@ -269,16 +269,27 @@ input:focus { border-color: var(--accent); }
   cursor: pointer;
   font-family: 'Cairo', sans-serif;
   text-align: right;
-  transition: all 0.2s;
+  transition: all 0.25s;
   width: 100%;
 }
-.online-opt-btn:hover {
+.online-tab.active {
   border-color: var(--accent);
-  background: rgba(251,191,36,0.08);
+  background: rgba(251,191,36,0.1);
+  box-shadow: 0 0 16px rgba(251,191,36,0.2);
 }
-.opt-icon { font-size: 1.8rem; }
-.opt-title { font-size: 1.1rem; font-weight: 700; display: block; }
-.opt-desc { font-size: 0.8rem; color: var(--muted); display: block; }
+.online-tab:hover { border-color: var(--accent); }
+.online-tab .opt-icon { font-size: 1.8rem; }
+.online-tab div { display: flex; flex-direction: column; text-align: right; }
+.online-tab .opt-title { font-size: 1.05rem; font-weight: 700; display: block; }
+.online-tab .opt-desc { font-size: 0.8rem; color: var(--muted); display: block; }
+
+/* المحتوى تحت التابز */
+#create-room-section, #join-room-section {
+  background: var(--surface2);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 16px;
+}
 
 /* ====== لوبي ====== */
 .room-code-display {

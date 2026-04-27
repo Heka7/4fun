@@ -133,24 +133,12 @@ function showScreen(id) {
 }
 
 function getPlayerName() {
-  const saved = localStorage.getItem('heka_global_player_name');
-  if (saved) return saved;
-  const input = document.getElementById('playerNameInput');
-  if (input && input.value.trim()) {
-    const n = input.value.trim();
-    localStorage.setItem('heka_global_player_name', n);
-    return n;
-  }
-  return null;
+  return localStorage.getItem('heka_global_player_name') || null;
 }
 
 function checkName() {
   const n = getPlayerName();
-  if (!n) {
-    const input = document.getElementById('playerNameInput');
-    if (input) { input.focus(); input.style.borderColor = 'var(--red)'; }
-    return false;
-  }
+  if (!n) { window.location.href = '../index.html'; return false; }
   return true;
 }
 
@@ -223,7 +211,7 @@ function calcMovable(G, playerIdx, dice) {
   const movable = [];
 
   pl.pieces.forEach((pos, idx) => {
-    if (pos === 57) return; // منتهية
+    if (pos >= 56) return; // وصلت أو في المنزل
     if (pos === -1 && dice !== 6) return;
     if (pos === -1 && dice === 6) { movable.push({ playerIdx, pieceIdx: idx }); return; }
     const newPos = pos + dice;
@@ -281,19 +269,28 @@ function movePiece(playerIdx, pieceIdx) {
     pl.pieces[pieceIdx] = 0;
     addLog(`${pl.name} أخرج قطعة! 🎉`);
     playSound('exit');
-    gotBonus = true; // 6 = دور إضافي
+    gotBonus = true;
+  } else if (pos < 0) {
+    // في البيت وما طلع 6 - تجاهل
+    G.diceRolled = false;
+    G.movablePieces = [];
+    return;
   } else {
     const newPos = pos + dice;
 
     if (newPos > 56) {
       addLog('لا يمكن التحريك!');
+      G.diceRolled = false;
+      G.movablePieces = [];
+      updateGameControls();
       return;
     }
 
     pl.pieces[pieceIdx] = newPos;
 
     if (newPos === 56) {
-      // وصلت للنهاية
+      // وصلت للمنزل - ضع 57 لتمييزها
+      pl.pieces[pieceIdx] = 57;
       pl.finishedPieces++;
       addLog(`${pl.name} وصّل قطعة للبيت! 🏆`);
       playSound('finish');
@@ -313,13 +310,16 @@ function movePiece(playerIdx, pieceIdx) {
       }
     } else {
       // فحص القتل
-      const [nr, nc] = path[newPos];
-      if (!isSafeCell(nr, nc)) {
-        const killed = checkAndKill(G, playerIdx, nr, nc);
-        if (killed > 0) {
-          addLog(`${pl.name} قتل ${killed} قطعة! ⚔️`);
-          playSound('kill');
-          gotBonus = true;
+      const cell = path[newPos];
+      if (cell) {
+        const [nr, nc] = cell;
+        if (!isSafeCell(nr, nc)) {
+          const killed = checkAndKill(G, playerIdx, nr, nc);
+          if (killed > 0) {
+            addLog(`${pl.name} قتل ${killed} قطعة! ⚔️`);
+            playSound('kill');
+            gotBonus = true;
+          }
         }
       }
     }
@@ -542,7 +542,6 @@ function checkWinCondition() {
 function playAgain() {
   document.getElementById('win-overlay').classList.add('hidden');
   if (window.G && window.G.mode === 'offline') {
-    // إعادة نفس الإعداد
     const playerDefs = window.G.players.map(pl => ({
       name: pl.name,
       color: pl.color,
@@ -550,9 +549,11 @@ function playAgain() {
     }));
     window.G = buildInitialGameState(playerDefs);
     window.G.mode = 'offline';
+    initBoard();
     drawBoard();
     updateHUD();
     updateGameControls();
+    renderDiceFace(0);
     if (!window.G.players[0].isHuman) setTimeout(doAiTurn, 800);
   } else {
     showMenu();
@@ -601,15 +602,15 @@ function playSound(type) {
 
 /* ===== تهيئة عند التحميل ===== */
 window.onload = () => {
-  // تحميل الاسم المحفوظ
   const saved = localStorage.getItem('heka_global_player_name');
-  if (saved) {
-    const input = document.getElementById('playerNameInput');
-    if (input) input.value = saved;
-    const welcome = document.getElementById('welcome-name');
-    if (welcome) { welcome.textContent = `أهلاً يا ${saved} 👋`; welcome.classList.remove('hidden'); }
+  if (!saved) {
+    // لا يوجد اسم - ارجع لصفحة index
+    window.location.href = '../index.html';
+    return;
   }
+  // عرض الاسم
+  const welcome = document.getElementById('welcome-name');
+  if (welcome) { welcome.textContent = `أهلاً يا ${saved} 👋`; welcome.classList.remove('hidden'); }
 
-  // تحديث hint الأوفلاين
   updateCountHint();
 };
