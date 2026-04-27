@@ -90,25 +90,8 @@
   <div id="screen-online" class="screen hidden">
     <div class="menu-container">
       <button class="back-btn" onclick="showMenu()">← رجوع</button>
-      <h2 class="section-title">🌐 لعب أونلاين</h2>
 
-      <!-- زري الاختيار -->
-      <div class="online-tabs">
-        <button class="online-tab active" id="tab-create" onclick="switchOnlineTab('create')">
-          <span class="opt-icon">🏠</span>
-          <div>
-            <span class="opt-title">إنشاء غرفة</span>
-            <span class="opt-desc">شيل كود وادي لأصحابك</span>
-          </div>
-        </button>
-        <button class="online-tab" id="tab-join" onclick="switchOnlineTab('join')">
-          <span class="opt-icon">🚪</span>
-          <div>
-            <span class="opt-title">انضمام لغرفة</span>
-            <span class="opt-desc">أدخل كود الغرفة</span>
-          </div>
-        </button>
-      </div>
+
 
       <!-- قسم الإنشاء -->
       <div id="create-room-section">
@@ -126,7 +109,8 @@
       <!-- قسم الانضمام -->
       <div id="join-room-section" class="hidden">
         <div class="input-group" style="margin-top:10px">
-          <input type="text" id="roomCodeInput" placeholder="أدخل كود الغرفة (5 أرقام)" maxlength="5" inputmode="numeric">
+          <input type="text" id="roomCodeInput" placeholder="أدخل كود الغرفة (5 أرقام)" maxlength="5"
+            inputmode="numeric">
         </div>
         <button class="start-btn" onclick="joinRoom()">🚪 انضمام</button>
       </div>

@@ -183,7 +183,6 @@ function rollDice() {
   drawBoard();
 
   if (G.movablePieces.length === 0) {
-    // لا توجد قطع تتحرك - نهاية الدور
     setTimeout(() => {
       addLog(`${G.players[G.currentPlayer].name} لا يوجد حركة`);
       nextTurn(false);
@@ -191,14 +190,9 @@ function rollDice() {
     return;
   }
 
-  // لو لاعب واحد فقط قادر يتحرك - تحرك تلقائياً
-  if (G.movablePieces.length === 1 && !G.players[G.currentPlayer].isHuman) {
-    setTimeout(() => movePiece(G.currentPlayer, G.movablePieces[0].pieceIdx), 600);
-  }
-
-  // لو كمبيوتر
+  // لو كمبيوتر - يختار القطعة بعد تأخير
   if (G.mode === 'offline' && !G.players[G.currentPlayer].isHuman) {
-    setTimeout(() => doAiMove(), 800);
+    setTimeout(() => doAiMove(), 900);
   }
 
   if (G.mode === 'online') pushGameState();
@@ -332,9 +326,12 @@ function movePiece(playerIdx, pieceIdx) {
   updateHUD();
   renderDiceFace(0);
 
+  if (G.gameOver) return;
+
   // دور إضافي لو طلع 6 أو قتل أو وصّل
-  if (dice === 6 || gotBonus) {
-    addLog(`${pl.name} له دور إضافي!`);
+  const getsBonus = (dice === 6) || gotBonus;
+  if (getsBonus) {
+    addLog(`${pl.name} له دور إضافي! 🔄`);
     G.extraTurn = true;
     updateGameControls();
     if (G.mode === 'online') pushGameState();
@@ -521,14 +518,19 @@ function addLog(text) {
 /* ===== الفوز ===== */
 function showWin(playerIdx) {
   const G = window.G;
-  const pl = G.players[playerIdx];
-  const c = COLORS[pl.color];
+  if (!G) return;
+  // لو النافذة ظاهرة بالفعل لا تعيد فتحها
   const overlay = document.getElementById('win-overlay');
+  if (!overlay.classList.contains('hidden')) return;
+  const pl = G.players[playerIdx];
+  if (!pl) return;
+  const c = COLORS[pl.color];
   overlay.classList.remove('hidden');
-  document.getElementById('win-emoji').textContent = playerIdx === 0 ? '🏆' : '🎉';
+  const myIdx = G.mode === 'offline' ? G.players.findIndex(p => p.isHuman) : G.players.findIndex(p => p.color === G.myColor);
+  document.getElementById('win-emoji').textContent = playerIdx === myIdx ? '🏆' : '🎉';
   document.getElementById('win-title').textContent = `${pl.name} فاز! 🎊`;
   document.getElementById('win-title').style.color = c.bg;
-  document.getElementById('win-subtitle').textContent = 'أحضر كل قطعه للبيت أول!';
+  document.getElementById('win-subtitle').textContent = playerIdx === myIdx ? '🏆 أحسنت ووصلت الأول!' : 'حاول تاني!';
   playSound('win');
 }
 
