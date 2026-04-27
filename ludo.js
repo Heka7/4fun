@@ -1010,7 +1010,7 @@ function handleBoardClick(e) {
         let px, py;
         if (piece.pos === -1) {
             const bc = BASE_COORDS[player.color][m.pieceIdx];
-            px = bc[0] * cell; py = bc[1] * cell;
+            px = bc[0] * cell + cell / 2; py = bc[1] * cell + cell / 2;
         } else if (piece.homeStretch >= 0) {
             const hc = HOME_STRETCH_COORDS[player.color][piece.homeStretch];
             if (hc) { px = hc[0] * cell + cell / 2; py = hc[1] * cell + cell / 2; }
