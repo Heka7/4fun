@@ -247,11 +247,29 @@ const DICE_SVGS = [
 ];
 
 function rollDice() {
-    if (G.diceRolled || G.gameOver || G.animating) return;
+    const diceEl = document.getElementById('dice');
+    // Emergency resets for stuck state
+    if (G.animating && diceEl && !diceEl.classList.contains('rolling')) {
+        G.animating = false;
+    }
+    if (G.diceRolled && (!G.validMoves || G.validMoves.length === 0)) {
+        G.diceRolled = false;
+    }
+
+    if (G.gameOver) return;
+    if (G.animating) return;
+    if (G.diceRolled) return;
+
     const player = G.players[G.currentTurn];
-    if (player.isBot) return;
+    if (player.isBot) {
+        showToast('انتظر دورك! ✋');
+        return;
+    }
     // Online: only let the correct player roll (use color for reliable sync)
-    if (G.mode === 'online' && player.color !== G.myColor) return;
+    if (G.mode === 'online' && player.color !== G.myColor) {
+        showToast('مش دورك! ✋');
+        return;
+    }
     doRollDice();
 }
 
