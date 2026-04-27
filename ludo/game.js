@@ -90,7 +90,17 @@ function showOfflineSetup() {
 
 function showOnlineSetup() {
   if (!checkName()) return;
+  switchOnlineTab('create'); // ابدأ دايماً بتبويب الإنشاء
   showScreen('screen-online');
+}
+
+function switchOnlineTab(tab) {
+  const isCreate = tab === 'create';
+  document.getElementById('create-room-section').classList.toggle('hidden', !isCreate);
+  document.getElementById('join-room-section').classList.toggle('hidden', isCreate);
+  document.getElementById('tab-create').classList.toggle('active', isCreate);
+  document.getElementById('tab-join').classList.toggle('active', !isCreate);
+  if (!isCreate) setTimeout(() => document.getElementById('roomCodeInput')?.focus(), 100);
 }
 
 function showScreen(id) {

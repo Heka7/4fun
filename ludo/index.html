@@ -79,17 +79,22 @@
   <div id="screen-online" class="screen hidden">
     <div class="menu-container">
       <button class="back-btn" onclick="showMenu()">← رجوع</button>
+      <h2 class="section-title">🌐 لعب أونلاين</h2>
 
-
+      <!-- تبويبات -->
+      <div class="online-tabs">
+        <button id="tab-create" class="online-tab active" onclick="switchOnlineTab('create')">🏠 إنشاء غرفة</button>
+        <button id="tab-join"   class="online-tab"        onclick="switchOnlineTab('join')">🚪 دخول غرفة</button>
+      </div>
 
       <!-- قسم الإنشاء -->
       <div id="create-room-section">
         <div class="option-group">
           <p class="option-label">عدد اللاعبين في الغرفة:</p>
           <div class="count-selector">
-            <button class="room-size-btn active" data-size="4" onclick="selectRoomSize(this)">4</button>
-            <button class="room-size-btn" data-size="3" onclick="selectRoomSize(this)">3</button>
             <button class="room-size-btn" data-size="2" onclick="selectRoomSize(this)">2</button>
+            <button class="room-size-btn" data-size="3" onclick="selectRoomSize(this)">3</button>
+            <button class="room-size-btn active" data-size="4" onclick="selectRoomSize(this)">4</button>
           </div>
         </div>
         <button class="start-btn" onclick="createRoom()">🏠 إنشاء الغرفة</button>
@@ -97,14 +102,18 @@
 
       <!-- قسم الانضمام -->
       <div id="join-room-section" class="hidden">
-        <div class="input-group" style="margin-top:10px">
-          <input type="text" id="roomCodeInput" placeholder="أدخل كود الغرفة (5 أرقام)" maxlength="5"
-            inputmode="numeric">
+        <div class="option-group">
+          <p class="option-label">أدخل كود الغرفة:</p>
+          <div class="input-group">
+            <input type="text" id="roomCodeInput" placeholder="مثال: 84321"
+              maxlength="5" inputmode="numeric" style="text-align:center; font-size:1.5rem; letter-spacing:6px;">
+          </div>
         </div>
-        <button class="start-btn" onclick="joinRoom()">🚪 انضمام</button>
+        <button class="start-btn" onclick="joinRoom()">🚪 دخول الغرفة</button>
       </div>
     </div>
   </div>
+
 
   <!-- لوبي الانتظار -->
   <div id="screen-lobby" class="screen hidden">
