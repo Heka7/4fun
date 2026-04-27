@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🤔 مين في الصورة؟</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Tajawal:wght@500;700;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-color: #1e293b;
+            --primary-color: #3b82f6;
+            --accent-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Screens & Transitions */
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Glassmorphism Card */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+            margin-bottom: 25px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.8rem;
+            margin: 10px 0;
+            font-weight: 900;
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        /* Inputs */
+        .game-input {
+            width: 100%;
+            padding: 18px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid var(--glass-border);
+            border-radius: 16px;
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+            margin: 10px 0;
+            outline: none;
+            transition: 0.3s;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .game-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 18px;
+            margin: 12px 0;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            font-family: 'Tajawal', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            color: white;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(255, 255, 255, 0.1), transparent);
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        .btn:hover::after {
+            opacity: 1;
+        }
+
+        .btn-blue {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-red {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--glass-border);
+            color: var(--text-muted);
+        }
+
+        /* Game Area */
+        .image-container {
+            width: 100%;
+            aspect-ratio: 1/1;
+            max-width: 400px;
+            margin: 20px auto;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 4px solid var(--glass-border);
+            position: relative;
+            background: #000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .player-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* or contain depending on image */
+            transition: filter 0.5s;
+        }
+
+        .blur-img {
+            filter: blur(20px) grayscale(50%);
+            /* For harder modes? Or just normal display */
+            /* Removed blur for this game as request is 'Show picture clear' */
+        }
+
+        .name-reveal {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--accent-color);
+            margin: 20px 0;
+            min-height: 60px;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Scoreboard */
+        .scoreboard {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 15px;
+        }
+
+        .player-score {
+            flex: 1;
+            background: var(--card-color);
+            padding: 10px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: 0.3s;
+        }
+
+        .player-score.active {
+            border-color: var(--primary-color);
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .score-val {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--success-color);
+        }
+
+        /* Hints & Tools */
+        .tools-bar {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .tool-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .tool-btn:hover {
+            background: var(--primary-color);
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: fall linear forwards;
+            z-index: 1000;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- Main Menu -->
+        <div id="screen-menu" class="screen active card animate__animated animate__fadeIn">
+            <h1 style="font-size: 4.5rem;">🤔❓</h1>
+            <h1>مين في الصورة؟</h1>
+            <p style="color:var(--text-muted); font-size:1.1rem;">اختبر معلوماتك الكروية وتحدى أصحابك</p>
+
+            <div style="margin-top: 40px;">
+                <button class="btn btn-blue" onclick="setupOffline()">
+                    <span>📱 لعب محلي (Offline)</span>
+                </button>
+                <button class="btn btn-green" onclick="showScreen('screen-online-setup')">
+                    <span>🌍 لعب أونلاين (Online)</span>
+                </button>
+                <button class="btn btn-secondary" onclick="alert('اعرف اسم اللاعب من الصوره و اكسب نقطه ')">
+                    <span>❓ طريقة اللعب</span>
+                </button>
+            </div>
+
+            <p style="margin-top:20px; font-size:0.8rem; color: #475569;">Created with ❤️ by HEKA </p>
+        </div>
+
+        <!-- Offline Setup -->
+        <div id="screen-offline-setup" class="screen card">
+            <h2>⚙️ إعدادات اللعب</h2>
+
+            <label style="display:block; text-align:right; margin-bottom:5px;">عدد اللاعبين</label>
+            <input type="number" id="num-players" class="game-input" value="2" min="1" max="10"
+                onchange="renderPlayerInputs()" style="margin-bottom: 20px;">
+
+            <div id="players-list-inputs" style="max-height: 250px; overflow-y: auto; margin-bottom: 20px;">
+                <!-- Inputs generated here -->
+            </div>
+
+            <button class="btn btn-blue" onclick="startOfflineGame()">🚀 ابدأ التحدي</button>
+            <button class="btn btn-secondary" onclick="showScreen('screen-menu')">رجوع</button>
+        </div>
+
+        <!-- Online Setup -->
+        <div id="screen-online-setup" class="screen card">
+            <h2>🌍 أونلاين (Online)</h2>
+            <div style="margin: 30px 0;">
+                <button class="btn btn-gold" onclick="createOnlineRoom()">✨ إنشاء غرفة</button>
+                <div style="margin:20px; border-top:1px solid var(--glass-border); position: relative;">
+                    <span
+                        style="position: absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--bg-color); padding:0 10px; color:var(--text-muted); font-size:0.9rem;">أو</span>
+                </div>
+                <input type="number" id="room-code-input" class="game-input" placeholder="أدخل كود الغرفة">
+                <button class="btn btn-blue" onclick="joinOnlineRoom()">🔗 انضمام</button>
+            </div>
+            <button class="btn btn-secondary" onclick="showScreen('screen-menu')">رجوع</button>
+        </div>
+
+        <!-- Online Lobby -->
+        <div id="screen-online-lobby" class="screen card">
+            <h2>⏳ ردهة الانتظار</h2>
+            <p>كود الغرفة:</p>
+            <h1 id="lobby-code" style="font-family:monospace; letter-spacing:5px;">----</h1>
+
+            <div class="scoreboard" style="flex-direction:column; background:rgba(0,0,0,0.3);">
+                <div style="display:flex; justify-content:space-between; padding:10px;">
+                    <span>👑 المضيف:</span>
+                    <span id="lobby-p1" style="color:var(--primary-color)">...</span>
+                </div>
+                <div
+                    style="display:flex; justify-content:space-between; padding:10px; border-top:1px solid rgba(255,255,255,0.1);">
+                    <span>👤 الضيف:</span>
+                    <span id="lobby-p2" style="color:var(--accent-color)">في الانتظار...</span>
+                </div>
+            </div>
+
+            <p id="lobby-msg" class="animate__animated animate__pulse animate__infinite">انتظار اللاعب الثاني...</p>
+            <button class="btn btn-secondary" onclick="location.reload()">خروج</button>
+        </div>
+
+        <!-- Game Interface -->
+        <div id="screen-game" class="screen">
+
+            <!-- Scoreboard -->
+            <div id="game-scoreboard" class="scoreboard">
+                <!-- Scores injected here -->
+            </div>
+
+            <!-- Turn Indicator -->
+            <div style="text-align:center; margin-bottom:10px;">
+                <span style="background:rgba(255,255,255,0.1); padding:5px 15px; border-radius:20px; font-size:0.9rem;">
+                    الدور على: <span id="current-turn-name"
+                        style="color:var(--accent-color); font-weight:bold;">...</span>
+                </span>
+            </div>
+
+            <!-- Image Card -->
+            <div class="image-container animate__animated animate__zoomIn" id="img-card">
+                <img id="player-image" src="" alt="Player" class="player-img"
+                    onerror="this.onerror=null; console.log('Error loading:', this.src); this.src='https://placehold.co/400x400?text=Image+Not+Found';">
+
+            </div>
+
+            <!-- Controls Area -->
+            <div id="controls-area" class="card" style="padding: 20px;">
+
+                <!-- Phase 1: Reveal -->
+                <div id="ctrl-reveal">
+                    <button class="btn btn-gold" onclick="revealName()">👁️ اظهر الاسم</button>
+                </div>
+
+                <!-- Phase 2: Judge -->
+                <div id="ctrl-judge" class="hidden" style="display:none;">
+                    <div class="name-reveal animate__animated animate__fadeInUp" id="player-name-display">
+                        Messi
+                    </div>
+                    <p style="color:var(--text-muted); margin-bottom:15px;">هل عرف المتسابق الإجابة؟</p>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn btn-green" onclick="handleJudge(true)">✅ صح (+1)</button>
+                        <button class="btn btn-red" onclick="handleJudge(false)">❌ غلط</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <button class="btn btn-secondary"
+                style="width:auto; margin:0 auto; display:block; padding:10px 30px; margin-top:20px;"
+                onclick="showScreen('screen-menu')">انسحاب</button>
+
+        </div>
+
+    </div>
+
+    <!-- Chat Widget -->
+    <div id="chat-widget" style="display:none; position:fixed; bottom:10px; right:10px; width:300px; z-index:200;">
+        <button id="chat-toggle" class="btn btn-blue"
+            style="width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 5px 15px rgba(0,0,0,0.5);"
+            onclick="toggleChat()">💬</button>
+
+        <div id="chat-box"
+            style="display:none; background:var(--card-color); border:1px solid var(--primary-color); border-radius:15px; height:350px; flex-direction:column; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,0.5);">
+            <div
+                style="padding:10px; background:var(--primary-color); font-weight:bold; display:flex; justify-content:space-between;">
+                <span>💬 المحادثة</span>
+                <span style="cursor:pointer;" onclick="toggleChat()">❌</span>
+            </div>
+            <div id="chat-messages" style="flex:1; padding:10px; overflow-y:auto; font-size:0.9rem; text-align:right;">
+                <!-- Messages -->
+            </div>
+            <div style="padding:5px; background:#0f172a; display:flex;">
+                <input type="text" id="chat-input" style="width:100%; padding:8px; border-radius:5px; border:none;"
+                    placeholder="اكتب رسالة...">
+                <button onclick="sendChatMessage()"
+                    style="background:var(--primary-color); border:none; color:white; padding:0 10px; border-radius:5px; margin-right:5px;">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio FX -->
+    <script>
+        // Simple Audio Synth/Beeps for polish without external files
+        const playSound = (type) => {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            const now = ctx.currentTime;
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'click') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            }
+        };
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, update, get, remove }
+            from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCp9_P3K__Sr76iKgaVG1iD4NluUqPtni4",
+            authDomain: "heka-codenames.firebaseapp.com",
+            databaseURL: "https://heka-codenames-default-rtdb.firebaseio.com",
+            projectId: "heka-codenames",
+            storageBucket: "heka-codenames.firebasestorage.app",
+            messagingSenderId: "901713932504",
+            appId: "1:901713932504:web:b6710ddf537cd3c7c4e7ad"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        /* 
+           🔥 DYNAMIC LOADING FROM GITHUB 🔥
+           Players loaded from: https://github.com/MO-heka/player
+           Just upload a new image → Appears automatically in game!
+        */
+
+        let playersDB = [];
+        let playersDataMap = new Map(); // name → imageURL
+        let isDataLoaded = false;
+
+        const GITHUB_REPO = 'MO-heka/player';
+        const GITHUB_API = `https://api.github.com/repos/${GITHUB_REPO}/contents/`;
+        const CDN_BASE = `https://cdn.jsdelivr.net/gh/${GITHUB_REPO}@main/`;
+
+        async function loadPlayersFromGitHub() {
+            try {
+                console.log('🔄 Loading from GitHub...');
+                const res = await fetch(GITHUB_API);
+                if (!res.ok) throw new Error(`API error: ${res.status}`);
+
+                const files = await res.json();
+                const imageFiles = files.filter(f =>
+                    f.type === 'file' && /\.(png|jpg|jpeg|webp)$/i.test(f.name)
+                );
+
+                playersDB = imageFiles.map(f => {
+                    const name = decodeURIComponent(f.name.replace(/\.(png|jpg|jpeg|webp)$/i, ''));
+                    const url = CDN_BASE + encodeURIComponent(f.name);
+                    playersDataMap.set(name, url);
+                    return name;
+                });
+
+                isDataLoaded = true;
+                console.log(`✅ ${playersDB.length} players loaded!`);
+                return true;
+            } catch (err) {
+                console.error('❌ GitHub load failed:', err);
+                alert('فشل التحميل من GitHub');
+                return false;
+            }
+        }
+
+        loadPlayersFromGitHub();
+
+
+        // Game State
+        let state = {
+            players: [], // { name, score }
+            turnIndex: 0,
+            currentImgIndex: 0,
+            shuffledImages: [],
+            isOnline: false,
+            roomId: null,
+            myRole: null, // 'host' or 'joiner'
+            revealed: false
+        };
+
+        // --- Helper Functions ---
+        const getRandom = (arr) => arr.sort(() => 0.5 - Math.random());
+        window.showScreen = (id) => {
+            playSound('click');
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        };
+
+        // --- Offline Setup ---
+        window.setupOffline = () => {
+            renderPlayerInputs();
+            window.showScreen('screen-offline-setup');
+        };
+
+        window.renderPlayerInputs = () => {
+            const n = document.getElementById('num-players').value;
+            const container = document.getElementById('players-list-inputs');
+            container.innerHTML = '';
+            for (let i = 1; i <= n; i++) {
+                container.innerHTML += `
+                    <div style="display:flex; gap:10px; margin-bottom:10px;">
+                        <span style="padding:10px; background:rgba(255,255,255,0.1); border-radius:10px;">#${i}</span>
+                        <input type="text" id="p${i}-name" class="game-input" value="اللاعب ${i}" style="margin:0;">
+                    </div>
+                 `;
+            }
+        };
+
+        window.startOfflineGame = () => {
+            const n = document.getElementById('num-players').value;
+            state.players = [];
+            for (let i = 1; i <= n; i++) {
+                state.players.push({
+                    name: document.getElementById(`p${i}-name`).value,
+                    score: 0
+                });
+            }
+            state.isOnline = false;
+            state.turnIndex = 0;
+            state.shuffledImages = getRandom([...playersDB]); // Shuffle deck
+            state.currentImgIndex = 0;
+
+            initGameUI();
+            window.showScreen('screen-game');
+        };
+
+        // --- Online Logic ---
+        window.createOnlineRoom = () => {
+            // Online is strictly 2 players for simplicity in this version
+            const myName = localStorage.getItem('heka_global_player_name') || "المضيف";
+            const code = Math.floor(1000 + Math.random() * 9000).toString();
+            state.roomId = code;
+            state.myRole = 'host';
+            state.isOnline = true;
+            state.players = [{ name: myName, score: 0 }, { name: '...', score: 0 }];
+
+            set(ref(db, `who_rooms/${code}`), {
+                status: 'waiting',
+                p1: myName,
+                deck: getRandom([...playersDB]),
+                currentImgIndex: 0,
+                turnIndex: 0,
+                scores: [0, 0],
+                revealed: false
+            });
+
+            enterLobby(code);
+        };
+
+        window.joinOnlineRoom = () => {
+            const myName = localStorage.getItem('heka_global_player_name') || "الضيف";
+            const code = document.getElementById('room-code-input').value;
+            if (!code) return alert('أدخل الكود');
+
+            get(ref(db, `who_rooms/${code}`)).then(snap => {
+                if (snap.exists()) {
+                    state.roomId = code;
+                    state.myRole = 'joiner';
+                    state.isOnline = true;
+                    // Update P2
+                    update(ref(db, `who_rooms/${code}`), {
+                        p2: myName,
+                        status: 'playing'
+                    });
+                    enterLobby(code);
+                } else {
+                    alert('غرفة غير موجودة');
+                }
+            });
+        };
+
+        function enterLobby(code) {
+            window.showScreen('screen-online-lobby');
+            document.getElementById('lobby-code').innerText = code;
+
+            subscribeToChat(code);
+
+            onValue(ref(db, `who_rooms/${code}`), (snap) => {
+                const data = snap.val();
+                if (!data) return;
+
+                document.getElementById('lobby-p1').innerText = data.p1;
+                document.getElementById('lobby-p2').innerText = data.p2 || '...';
+
+                if (data.status === 'playing') {
+                    // Sync State
+                    state.shuffledImages = data.deck;
+                    state.currentImgIndex = data.currentImgIndex;
+                    state.turnIndex = data.turnIndex;
+                    state.revealed = data.revealed || false;
+                    state.players = [
+                        { name: data.p1, score: data.scores[0] },
+                        { name: data.p2, score: data.scores[1] }
+                    ];
+
+                    // Check if we are already in game screen
+                    if (!document.getElementById('screen-game').classList.contains('active')) {
+                        initGameUI();
+                        window.showScreen('screen-game');
+                    } else {
+                        // Just update UI
+                        updateGameUI();
+                    }
+                }
+            });
+        }
+
+        // --- Game Core ---
+        function initGameUI() {
+            updateGameUI();
+        }
+
+        function updateGameUI() {
+            // 1. Scoreboard
+            const sb = document.getElementById('game-scoreboard');
+            sb.innerHTML = '';
+            state.players.forEach((p, idx) => {
+                const isActive = idx === state.turnIndex;
+                sb.innerHTML += `
+                    <div class="player-score ${isActive ? 'active' : ''}">
+                        <div style="font-size:0.8rem; color:var(--text-muted);">${p.name}</div>
+                        <div class="score-val">${p.score}</div>
+                    </div>
+                `;
+            });
+
+            // 2. Turn Name
+            document.getElementById('current-turn-name').innerText = state.players[state.turnIndex].name;
+
+            // 3. Image - Load from GitHub CDN
+            const currentPlayerName = state.shuffledImages[state.currentImgIndex];
+            const imageUrl = playersDataMap.get(currentPlayerName);
+
+            if (imageUrl) {
+                document.getElementById('player-image').src = imageUrl;
+            } else {
+                // Fallback (shouldn't happen if GitHub loaded correctly)
+                console.warn(`No image for ${currentPlayerName}`);
+                document.getElementById('player-image').src = `player/${encodeURIComponent(currentPlayerName)}.png`;
+            }
+
+            // 4. Controls & Reveal Logic
+            const controlsArea = document.getElementById('controls-area');
+            const revealerDiv = document.getElementById('ctrl-reveal');
+            const judgeDiv = document.getElementById('ctrl-judge');
+            const nameDisplay = document.getElementById('player-name-display');
+
+            // Set or clear name based on revealed state
+            if (state.revealed) {
+                nameDisplay.innerText = currentPlayerName;
+            } else {
+                nameDisplay.innerText = ''; // Clear the name when not revealed
+            }
+
+            // Visibility based on state.revealed
+            if (state.revealed) {
+                revealerDiv.style.display = 'none';
+                judgeDiv.style.display = 'block';
+                judgeDiv.classList.add('animate__fadeInUp');
+            } else {
+                revealerDiv.style.display = 'block';
+                judgeDiv.style.display = 'none';
+                judgeDiv.classList.remove('animate__fadeInUp');
+            }
+
+            // Permissions (Host-Only in Online)
+            if (state.isOnline) {
+                if (state.myRole === 'host') {
+                    // Host sees controls
+                    controlsArea.style.display = 'block';
+                } else {
+                    // Guest hides controls
+                    controlsArea.style.display = 'none';
+                }
+            } else {
+                // Offline: Always show controls
+                controlsArea.style.display = 'block';
+            }
+
+            // Animation reset (Image)
+            const img = document.getElementById('img-card');
+            img.classList.remove('animate__zoomIn');
+            void img.offsetWidth; // trigger reflow
+            img.classList.add('animate__zoomIn');
+        }
+
+        window.revealName = () => {
+            playSound('click');
+            state.revealed = true;
+
+            if (state.isOnline) {
+                update(ref(db, `who_rooms/${state.roomId}`), {
+                    revealed: true
+                });
+            } else {
+                updateGameUI();
+            }
+        };
+
+        window.handleJudge = (isCorrect) => {
+            if (isCorrect) {
+                playSound('correct');
+                state.players[state.turnIndex].score++;
+                triggerConfetti();
+            } else {
+                playSound('wrong');
+            }
+
+            // Next Turn
+            state.turnIndex = (state.turnIndex + 1) % state.players.length;
+            // Next Image
+            state.currentImgIndex++;
+            if (state.currentImgIndex >= state.shuffledImages.length) {
+                alert('game over!');
+                state.currentImgIndex = 0; // Loop or end
+            }
+
+            // Update State
+            if (state.isOnline) {
+                // Sync to DB
+                update(ref(db, `who_rooms/${state.roomId}`), {
+                    scores: state.players.map(p => p.score),
+                    turnIndex: state.turnIndex,
+                    currentImgIndex: state.currentImgIndex,
+                    revealed: false
+                });
+            } else {
+                state.revealed = false; // Reset revealed state for next player
+                updateGameUI();
+            }
+        };
+
+        // Confetti Effect
+        function triggerConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.background = ['#f00', '#0f0', '#00f', '#ff0'][Math.floor(Math.random() * 4)];
+                c.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 3000);
+            }
+        }
+
+        // --- Chat System ---
+        function subscribeToChat(roomId) {
+            document.getElementById('chat-widget').style.display = 'block';
+
+            onValue(ref(db, `who_rooms/${roomId}/chat`), (snap) => {
+                const msgs = snap.val();
+                const container = document.getElementById('chat-messages');
+                container.innerHTML = '';
+
+                if (msgs) {
+                    const myName = localStorage.getItem('heka_global_player_name') || (state.myRole === 'host' ? "المضيف" : "الضيف");
+                    Object.values(msgs).forEach(msg => {
+                        const div = document.createElement('div');
+                        const isMe = msg.sender === myName;
+                        div.style.padding = '5px 10px';
+                        div.style.margin = '5px 0';
+                        div.style.borderRadius = '10px';
+                        div.style.background = isMe ? '#3b82f6' : '#334155';
+                        div.style.alignSelf = isMe ? 'flex-end' : 'flex-start';
+                        div.style.width = 'fit-content';
+                        div.style.maxWidth = '80%';
+                        div.innerText = `${msg.sender}: ${msg.text}`;
+                        container.appendChild(div);
+                    });
+                    container.scrollTop = container.scrollHeight;
+                }
+            });
+        }
+
+        window.toggleChat = () => {
+            const box = document.getElementById('chat-box');
+            box.style.display = box.style.display === 'none' ? 'flex' : 'none';
+        };
+
+        window.sendChatMessage = () => {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text || !state.roomId) return;
+
+            const myName = localStorage.getItem('heka_global_player_name') || (state.myRole === 'host' ? "المضيف" : "الضيف");
+            const msgId = "msg_" + Date.now();
+            update(ref(db, `who_rooms/${state.roomId}/chat/${msgId}`), {
+                sender: myName,
+                text: text
+            });
+            input.value = '';
+        };
+
+    </script>
+</body>
+
+</html>
