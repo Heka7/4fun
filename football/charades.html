@@ -350,9 +350,62 @@
         let playersData = [];
         let isDataLoaded = false;
 
-        const GITHUB_REPO = 'MO-heka/player';
-        const GITHUB_API = `https://api.github.com/repos/${GITHUB_REPO}/contents/`;
+        const GITHUB_REPO = 'Heka7/4fun';
+        const GITHUB_API = `https://api.github.com/repos/${GITHUB_REPO}/contents/football/player/player/`;
         const CDN_BASE = `player/player/`;
+
+        // Fallback list of players in case offline
+        const LOCAL_FALLBACK_PLAYERS = [
+            "Achraf Hakimi", "Ademola Lookman", "Adrien Rabiot", "Alejandro Balde", "Alejandro Garnacho",
+            "Alejandro Grimaldo", "Alessandro Bastoni", "Alex Iwobi", "Alex Meret", "Alexander Isak",
+            "Alisson Becker", "Alphonso Davies", "Amadou Onana", "Anatolii Trubin", "Andrea Cambiaso",
+            "Andreas Christensen", "Andrew Robertson", "André Gomes", "André Onana", "Anthony Elanga",
+            "Anthony Gordon", "Antoine Griezmann", "Artem Dovbyk", "Ben White", "Benjamin Henrichs",
+            "Benjamin Pavard", "Bernardo Silva", "Billy Gilmour", "Bradley Barcola", "Brahim Díaz",
+            "Breel Embolo", "Bremer", "Brennan Johnson", "Bruno Fernandes", "Bryan Mbeumo", "Bukayo Saka",
+            "Casemiro", "Christopher Nkunku", "Cody Gakpo", "Cole Palmer", "Conor Gallagher", "Corentin Tolisso",
+            "Cristian Romero", "César Azpilicueta", "Dani Carvajal", "Dani Olmo", "Danilo", "David Alaba",
+            "David Neres", "David Raum", "David Raya", "Davide Frattesi", "Dayot Upamecano", "Declan Rice",
+            "Denzel Dumfries", "Destiny Udogie", "Dominik Szoboszlai", "Donyell Malen", "Douglas Luiz",
+            "Eberechi Eze", "Ederson Moraes", "Edmond Tapsoba", "Emerson Royal", "Emile Smith Rowe", "Emre Can",
+            "Endrick", "Enzo Fernández", "Erling Haaland", "Fabián Ruiz", "Federico Dimarco", "Federico Valverde",
+            "Ferland Mendy", "Ferran Torres", "Fikayo Tomori", "Folarin Balogun", "Francesco Acerbi",
+            "Frank Zambo Anguissa", "Gabriel Gudmundsson", "Gabriel Jesus", "Gabriel Magalhães", "Gabriel Martinelli",
+            "Gabriel Pereira", "Gavi", "Geoffrey Kondogbia", "Georges Mikautadze", "Gerónimo Rulli", "Gianluca Mancini",
+            "Gianluigi Donnarumma", "Gift Orban", "Gonçalo Ramos", "Granit Xhaka", "Gregor Kobel", "Guglielmo Vicario",
+            "Harrison Jones", "Harry Kane", "Harry Maguire", "Harvey Barnes", "Harvey Elliott", "Henrikh Mkhitaryan",
+            "Hiroki Ito", "Hugo Ekitike", "Igor Jesus", "Isak Hien", "Ismaïla Sarr", "Iñaki Williams", "Jack Grealish",
+            "Jackson Tchatchoua", "Jadon Sancho", "Jamal Musiala", "James Maddison", "Jarrad Branthwaite",
+            "Jarrod Bowen", "Jean-Philippe Mateta", "Jeremie Frimpong", "Joaquín Correa", "Joelinton", "John McGinn",
+            "John Stones", "Jonathan Rowe", "Jonathan Tah", "Jordan Beyer", "Jordan Pickford", "Joshua Kimmich",
+            "Joshua Zirkzee", "Jota Silva", "João Gomes", "João Neves", "João Palhinha", "João Pedro", "Joško Gvardiol",
+            "Juan Jesus", "Jude Bellingham", "Julian Araujo", "Julian Brandt", "Julián Alvarez", "Jurriën Timber",
+            "Jérémy Doku", "Kai Havertz", "Kaoru Mitoma", "Karim Adeyemi", "Keane Lewis-Potter", "Kenan Yildiz",
+            "Khéphren Thuram", "Kieran Trippier", "Kim Min-Jae", "Kingsley Coman", "Kobbie Mainoo", "Koke",
+            "Konrad Laimer", "Kyle Walker-Peters", "Kyle Walker", "Lamine Yamal", "Leandro Paredes", "Leandro Trossard",
+            "Leon Bailey", "Leon Goretzka", "Leonardo Spinazzola", "Leroy Sané", "Levi Colwill", "Lewis Cook",
+            "Lewis Dunk", "Lewis Ferguson", "Lewis Hall", "Lewis Miley", "Lilian Brassier", "Lorenzo Pellegrini",
+            "Loïs Openda", "Lucas Digne", "Lucas Perri", "Luke Shaw", "Malick Fofana", "Manuel Akanji", "Manuel Locatelli",
+            "Manuel Neuer", "Marc Cucurella", "Marcel Sabitzer", "Marco Asensio", "Marco Carnesecchi", "Marcos Llorente",
+            "Marcus Thuram", "Mario Hermoso", "Marquinhos", "Martim Fernandes", "Martin Terrier", "Martín Zubimendi",
+            "Mason Greenwood", "Mateo Retegui", "Mateus Fernandes", "Matheus Cunha", "Mathys Tel", "Matteo Darmian",
+            "Matteo Politano", "Matteo Ruggeri", "Matthew Davies", "Max Kilman", "Maxence Caqueret", "Mehdi Taremi",
+            "Michael Olise", "Mike Maignan", "Mikel Merino", "Mohamed Salah", "Mohammed Kudus", "Moisés Caicedo",
+            "Morgan Gibbs-White", "Murillo", "Myles Lewis-Skelly", "Nahuel Molina", "Neco Williams", "Nick Pope",
+            "Nico Schlotterbeck", "Nico Williams", "Nicolas Jackson", "Nicolò Barella", "Nicolò Zaniolo", "Noni Madueke",
+            "Noussair Mazraoui", "Nuno Mendes", "Oihan Sancet", "Oleksandr Zinchenko", "Ollie Watkins", "Omar Marmoush",
+            "Pablo Torre", "Pape Matar Sarr", "Pau Torres", "Paulo Dybala", "Pedri", "Pedro Neto", "Pedro Porro",
+            "Phil Foden", "Pierre Kalulu", "Raphinha", "Rayan Cherki", "Reece James", "Remo Freuler", "Riccardo Calafiori",
+            "Riccardo Orsolini", "Richarlison", "Rico Lewis", "Robert Andrich", "Robert Lewandowski", "Rodri",
+            "Rodrigo Gomes", "Rodrygo", "Romelu Lukaku", "Samuel Chukwueze", "Samuel Lino", "Sandro Tonali",
+            "Santiago Castro", "Scott McTominay", "Serge Gnabry", "Serhou Guirassy", "Simon Adingra", "Simon Mignolet",
+            "Simon Moore", "Son Heung-Min", "Stanislav Lobotka", "Stefan Posch", "Sven Botman", "Takumi Minamino",
+            "Tammy Abraham", "Teun Koopmeiners", "Thilo Kehrer", "Tijjani Reijnders", "Tino Livramento", "Tomás Palacios",
+            "Toti Gomes", "Triston Rowe", "Ulisses Garcia", "Vanderson", "Victor Boniface", "Vitinha", "Waldemar Anton",
+            "Wesley Fofana", "Wilfried Singo", "Willi Orban", "William Saliba", "Willian Pacho", "Xavi Simons",
+            "Yann Aurel Bisseck", "Yann Sommer", "Yeremy Pino", "Yoane Wissa", "Youri Tielemans", "Youssouf Fofana",
+            "Yves Bissouma", "Zac Johnson", "Zaid Romero", "Zé Pedro", "Álvaro Morata", "Ángel Correa"
+        ];
 
         async function loadPlayersFromGitHub() {
             try {
@@ -377,12 +430,23 @@
                 // Make it available globally
                 window.playersData = playersData;
                 isDataLoaded = true;
-                console.log(`✅ ${playersData.length} players loaded!`);
+                console.log(`✅ ${playersData.length} players loaded from GitHub!`);
                 return true;
             } catch (err) {
-                console.error('❌ GitHub load failed:', err);
-                alert('فشل التحميل من GitHub');
-                return false;
+                console.error('❌ GitHub load failed, using local fallback:', err);
+                
+                playersData = LOCAL_FALLBACK_PLAYERS.map(name => {
+                    const url = CDN_BASE + encodeURIComponent(name + ".png");
+                    return {
+                        name: name,
+                        img: url
+                    };
+                });
+
+                window.playersData = playersData;
+                isDataLoaded = true;
+                console.log(`✅ ${playersData.length} players loaded from fallback!`);
+                return true;
             }
         }
 

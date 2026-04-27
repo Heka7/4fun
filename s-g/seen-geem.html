@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>سين جيم - ساحة المعركة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            /* Deep modern slate */
+            --primary-color: #f97316;
+            /* Orange-500 */
+            --primary-hover: #ea580c;
+            --header-bg: rgba(30, 41, 59, 0.75);
+            --card-bg: rgba(30, 41, 59, 0.6);
+            --text-color: #f8fafc;
+            --accent: #334155;
+            --board-bg: transparent;
+            /* Let gradient show through */
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --btn-bg: rgba(71, 85, 105, 0.6);
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(-45deg, #0f172a, #1a1025, #170f1a, #050a15);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            position: relative;
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 40vw;
+            height: 40vw;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            filter: blur(60px);
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -10%;
+            right: -10%;
+            width: 40vw;
+            height: 40vw;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            filter: blur(60px);
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--header-bg);
+            padding: 15px 30px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--glass-border);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 10;
+        }
+
+        .header-left,
+        .header-right {
+            flex: 1;
+            display: flex;
+        }
+
+        .header-right {
+            justify-content: flex-start;
+            /* RTL: right side */
+        }
+
+        .header-left {
+            justify-content: flex-end;
+            /* RTL: left side */
+        }
+
+        .header>.turn-indicator {
+            flex: 0 0 auto;
+            text-align: center;
+        }
+
+        .header-title {
+            color: var(--text-color);
+            font-size: 2.2rem;
+            font-weight: 900;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: -1px;
+        }
+
+        .header-title span {
+            color: var(--primary-color);
+        }
+
+        .header-center {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #cbd5e1;
+            letter-spacing: 1px;
+        }
+
+        .turn-indicator {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            padding: 8px 25px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-exit {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            padding: 8px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-exit:hover {
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.5);
+            transform: scale(1.05);
+        }
+
+        /* MAIN BOARD */
+        .board-container {
+            flex: 1;
+            padding: 30px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+            overflow-y: auto;
+            z-index: 1;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            width: 100%;
+            max-width: 1500px;
+            margin: auto;
+        }
+
+        .category-column {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(30, 41, 59, 0.45);
+            border-radius: 24px;
+            padding: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .category-column:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .points-col {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .point-btn {
+            background: rgba(255, 255, 255, 0.06);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+            width: 90px;
+            height: 55px;
+            font-size: 1.6rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .point-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: scale(1.15) translateY(-2px);
+            box-shadow: 0 10px 20px rgba(249, 115, 22, 0.4);
+            color: #fff;
+        }
+
+        .point-btn:disabled {
+            background-color: rgba(15, 23, 42, 0.5);
+            color: #475569;
+            border-color: rgba(255, 255, 255, 0.05);
+            cursor: not-allowed;
+            transform: scale(0.95);
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .category-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 20px;
+            width: 160px;
+        }
+
+        .cat-img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid var(--glass-border);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s;
+        }
+
+        .category-column:hover .cat-img {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .cat-name {
+            margin-top: 15px;
+            background: rgba(15, 23, 42, 0.6);
+            color: var(--text-color);
+            padding: 8px 15px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        /* FOOTER SCORES & LIFELINES */
+        .footer {
+            background-color: rgba(15, 23, 42, 0.6);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.4);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 10;
+        }
+
+        .team-panel {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 12px 20px;
+            border-radius: 24px;
+            border: 2px solid transparent;
+            background: rgba(255, 255, 255, 0.03);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1);
+        }
+
+        .team-panel.rhs {
+            flex-direction: row-reverse;
+        }
+
+        .team-panel.active-turn {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 25px rgba(249, 115, 22, 0.3), inset 0 0 15px rgba(249, 115, 22, 0.1);
+            background: rgba(249, 115, 22, 0.05);
+            transform: translateY(-5px);
+        }
+
+        .score-box {
+            display: flex;
+            align-items: center;
+            background-color: rgba(15, 23, 42, 0.4);
+            border-radius: 30px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3), 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .score-name {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            padding: 12px 25px;
+            font-weight: 900;
+            font-size: 1.3rem;
+            min-width: 120px;
+            text-align: center;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .score-value {
+            padding: 10px 30px;
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-color);
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .score-adjust {
+            display: flex;
+            flex-direction: column;
+            padding: 0 15px;
+            gap: 5px;
+        }
+
+        .score-adjust button {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 6px;
+            color: var(--text-color);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-adjust button:hover {
+            background: var(--primary-color);
+            transform: scale(1.1);
+            color: white;
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.4);
+        }
+
+        .lifelines {
+            display: flex;
+            gap: 10px;
+        }
+
+        .lifeline-btn {
+            background-color: var(--btn-bg);
+            border: 1px solid var(--glass-border);
+            color: white;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lifeline-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #10b981, #059669);
+            /* Emerald for positive action */
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: scale(1.15) translateY(-5px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .lifeline-btn:disabled {
+            opacity: 0.4;
+            background-color: rgba(15, 23, 42, 0.5);
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
+
+        .lifeline-btn::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.2s;
+            pointer-events: none;
+        }
+
+        .lifeline-btn:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* QUESTION SCREEN OVERLAY */
+        .question-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(100%) scale(0.9);
+            opacity: 0;
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.4s;
+        }
+
+        .question-screen.active {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .q-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 25px 40px;
+            display: flex;
+            justify-content: space-between;
+            box-sizing: border-box;
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 1) 0%, rgba(15, 23, 42, 0) 100%);
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--text-color);
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .q-header span:first-child {
+            color: var(--selected-border);
+        }
+
+        .q-header span:last-child {
+            color: var(--primary-color);
+        }
+
+        .q-timer-container {
+            position: absolute;
+            top: 40px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 15px 40px;
+            border-radius: 50px;
+            box-shadow: 0 0 30px rgba(249, 115, 22, 0.15);
+            border: 2px solid rgba(249, 115, 22, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .q-timer {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+            transition: color 0.3s;
+            min-width: 120px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-btn {
+            background: var(--btn-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .timer-btn:hover {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: white;
+            transform: scale(1.15);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+        }
+
+        .q-box {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 50px;
+            border-radius: 30px;
+            font-size: 3.5vw;
+            font-weight: 700;
+            text-align: center;
+            max-width: 85%;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border);
+            margin-top: 180px;
+            min-height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'Twemoji Mozilla', 'Cairo', sans-serif;
+            line-height: 1.5;
+        }
+
+        .emoji-flag {
+            font-size: 10vw;
+            display: block;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.4));
+        }
+
+        .q-answer-box {
+            background: linear-gradient(135deg, #0f766e, #047857);
+            color: white;
+            padding: 30px 50px;
+            border-radius: 20px;
+            font-size: 2.5vw;
+            font-weight: 800;
+            margin-top: 40px;
+            text-align: center;
+            max-width: 85%;
+            display: none;
+            box-shadow: 0 15px 30px rgba(4, 120, 87, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .q-actions {
+            margin-top: 50px;
+            display: flex;
+            gap: 25px;
+        }
+
+        .action-btn {
+            padding: 18px 50px;
+            font-size: 1.6rem;
+            font-weight: 900;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: inherit;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-show {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-show:hover {
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 0 15px 30px rgba(249, 115, 22, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .award-btns {
+            display: none;
+            gap: 25px;
+        }
+
+        .btn-team1 {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-team2 {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-nobody {
+            background: linear-gradient(135deg, #64748b, #475569);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .award-btns button:hover {
+            transform: scale(1.08) translateY(-4px);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.4);
+        }
+
+
+
+        .floating-score {
+            position: absolute;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4caf50;
+            pointer-events: none;
+            animation: floatUp 1.5s ease-out forwards;
+            z-index: 1000;
+        }
+
+        .floating-score.negative {
+            color: #f44336;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .point-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .point-btn::after {
+            content: "";
+            background: rgba(255, 255, 255, 0.2);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            transition: transform 0.5s;
+        }
+
+        .point-btn:hover::after {
+            transform: translate(-50%, -50%) scale(2);
+        }
+
+        .point-btn:disabled {
+            opacity: 0.5;
+            filter: grayscale(100%);
+        }
+
+        .timer-pulse {
+            animation: timerPulse 0.5s infinite alternate;
+        }
+
+        @keyframes timerPulse {
+            from {
+                transform: scale(1);
+                text-shadow: 0 0 20px rgba(255, 59, 59, 0.5);
+            }
+
+            to {
+                transform: scale(1.2);
+                text-shadow: 0 0 40px rgba(255, 0, 0, 1);
+            }
+        }
+
+        /* ===================================================
+           MOBILE RESPONSIVE - شاشة اللعبة
+        =================================================== */
+        @media (max-width: 900px) {
+
+            /* تعطيل الأنيميشن والبلور على الموبايل لتحسين الأداء */
+            body {
+                overflow-y: auto;
+                animation: none;
+                background: #0f172a;
+            }
+
+            .header,
+            .footer,
+            .category-column,
+            .cat-name,
+            .q-timer-container,
+            .q-box {
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+            }
+
+            body::before,
+            body::after {
+                display: none;
+            }
+
+            .emoji-flag {
+                filter: none !important; 
+            }
+
+            .q-box, .q-timer-container, .q-answer-box, .category-column {
+                box-shadow: none !important;
+            }
+
+            /* HEADER */
+            .header {
+                padding: 10px 12px;
+                gap: 6px;
+            }
+
+            .header-title {
+                font-size: 1.4rem;
+            }
+
+            .turn-indicator {
+                font-size: 0.85rem;
+                padding: 6px 12px;
+            }
+
+            .btn-exit {
+                font-size: 0.8rem;
+                padding: 6px 10px;
+            }
+
+            /* BOARD - تحويل من صفوف أفقية لعمود */
+            .board-container {
+                padding: 10px 8px;
+                overflow-y: auto;
+                align-items: flex-start;
+            }
+
+            .categories-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .category-column {
+                padding: 10px 8px;
+                border-radius: 14px;
+                flex-direction: column;
+            }
+
+            .category-center {
+                width: 100%;
+                margin: 8px 0;
+            }
+
+            .cat-img {
+                height: 90px;
+                border-radius: 8px;
+            }
+
+            .cat-name {
+                font-size: 0.8rem;
+                padding: 5px 8px;
+                margin-top: 6px;
+            }
+
+            .points-col {
+                flex-direction: row;
+                gap: 6px;
+                justify-content: center;
+                width: 100%;
+            }
+
+            .point-btn {
+                width: auto;
+                flex: 1;
+                height: 40px;
+                font-size: 1rem;
+                border-radius: 20px;
+            }
+
+            /* FOOTER */
+            .footer {
+                padding: 10px 8px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .team-panel {
+                padding: 8px 12px;
+                gap: 10px;
+                border-radius: 16px;
+                width: 100%;
+                box-sizing: border-box;
+                justify-content: center;
+            }
+
+            .team-panel.rhs {
+                flex-direction: row;
+            }
+
+            .score-box {
+                flex: 1;
+            }
+
+            .score-name {
+                font-size: 0.9rem;
+                padding: 8px 12px;
+                min-width: 70px;
+            }
+
+            .score-value {
+                font-size: 1.4rem;
+                padding: 6px 16px;
+                min-width: 50px;
+            }
+
+            .score-adjust button {
+                width: 22px;
+                height: 22px;
+                font-size: 0.75rem;
+            }
+
+            .lifeline-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            /* QUESTION SCREEN */
+            .q-header {
+                font-size: 1.4rem;
+                padding: 15px 20px;
+            }
+
+            .q-timer-container {
+                top: 60px;
+                padding: 10px 20px;
+                gap: 12px;
+            }
+
+            .q-timer {
+                font-size: 2.8rem;
+                min-width: 70px;
+            }
+
+            .timer-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+
+            .q-box {
+                font-size: 5.5vw;
+                padding: 25px 20px;
+                margin-top: 140px;
+                max-width: 95%;
+                min-height: 150px;
+                border-radius: 20px;
+            }
+
+            .emoji-flag {
+                font-size: 18vw;
+            }
+
+            .q-answer-box {
+                font-size: 5vw;
+                padding: 18px 25px;
+                max-width: 95%;
+                border-radius: 14px;
+                margin-top: 20px;
+            }
+
+            .q-actions {
+                margin-top: 25px;
+                gap: 12px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .action-btn {
+                padding: 12px 24px;
+                font-size: 1rem;
+                border-radius: 12px;
+                letter-spacing: 0;
+            }
+
+            .award-btns {
+                gap: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .categories-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 7px;
+            }
+
+            .cat-img {
+                height: 75px;
+            }
+
+            .cat-name {
+                font-size: 0.72rem;
+            }
+
+            .point-btn {
+                height: 34px;
+                font-size: 0.85rem;
+            }
+
+            .header-title {
+                font-size: 1.1rem;
+            }
+
+            .turn-indicator {
+                font-size: 0.75rem;
+                padding: 5px 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Loading Overlay -->
+    <div id="loading"
+        style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-color);z-index:999;display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--primary-color);">
+        جاري تهيئة اللعبة...
+    </div>
+
+    <header class="header">
+        <div class="header-right">
+            <div class="header-title">سين <span>جيم</span></div>
+        </div>
+        <div class="turn-indicator" id="turn-display">دور فريق : ...</div>
+        <div class="header-left">
+            <button class="btn-exit" onclick="confirmExit()">
+                خروج <i class="fas fa-sign-out-alt" style="margin-right: 5px;"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- BOARD -->
+    <main class="board-container">
+        <div class="categories-grid" id="board-grid">
+            <!-- Rendered by JS -->
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <!-- Team 1 -->
+        <div class="team-panel">
+            <div class="score-box">
+                <div class="score-adjust">
+                    <button onclick="manualScore('team1', 100)"><i class="fas fa-plus"></i></button>
+                    <button onclick="manualScore('team1', -100)"><i class="fas fa-minus"></i></button>
+                </div>
+                <div class="score-value" id="t1-score">0</div>
+                <div class="score-name" id="t1-name">فريق 1</div>
+            </div>
+            <div class="lifelines">
+                <button class="lifeline-btn" id="ll-t1-phone" onclick="useLifeline('team1', 'phone')"
+                    title="اتصال بصديق"><i class="fas fa-phone"></i></button>
+                <button class="lifeline-btn" id="ll-t1-double" onclick="useLifeline('team1', 'double')"
+                    title="جاوب مرتين"><i class="fas fa-reply-all"></i></button>
+                <button class="lifeline-btn" id="ll-t1-skip" onclick="useLifeline('team1', 'skip')"
+                    title="استريح (منع الخصم)"><i class="fas fa-hand-paper"></i></button>
+            </div>
+        </div>
+
+        <!-- Team 2 -->
+        <div class="team-panel rhs">
+            <div class="score-box">
+                <div class="score-name" id="t2-name">فريق 2</div>
+                <div class="score-value" id="t2-score">0</div>
+                <div class="score-adjust">
+                    <button onclick="manualScore('team2', 100)"><i class="fas fa-plus"></i></button>
+                    <button onclick="manualScore('team2', -100)"><i class="fas fa-minus"></i></button>
+                </div>
+            </div>
+            <div class="lifelines">
+                <button class="lifeline-btn" id="ll-t2-skip" onclick="useLifeline('team2', 'skip')"
+                    title="استريح (منع الخصم)"><i class="fas fa-hand-paper"></i></button>
+                <button class="lifeline-btn" id="ll-t2-double" onclick="useLifeline('team2', 'double')"
+                    title="جاوب مرتين"><i class="fas fa-reply-all"></i></button>
+                <button class="lifeline-btn" id="ll-t2-phone" onclick="useLifeline('team2', 'phone')"
+                    title="اتصال بصديق"><i class="fas fa-phone"></i></button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- QUESTION SCREEN -->
+    <div class="question-screen" id="q-screen">
+        <div class="q-header">
+            <span id="q-cat-name">الفئة</span>
+            <span id="q-points-val">0</span>
+        </div>
+
+        <div class="q-timer-container">
+            <div class="q-timer" id="q-timer">0</div>
+            <button class="timer-btn" id="btn-toggle-timer" onclick="toggleTimer()" title="إيقاف/استئناف"><i
+                    class="fas fa-pause"></i></button>
+            <button class="timer-btn" onclick="resetTimer()" title="إعادة تصفير الوقت"><i
+                    class="fas fa-redo"></i></button>
+        </div>
+
+        <div class="q-box" id="q-text">نص السؤال يعرض هنا</div>
+        <div class="q-answer-box" id="q-answer">نص الإجابة يعرض هنا</div>
+
+        <div class="q-actions">
+            <button class="action-btn btn-show" id="btn-show-ans" onclick="showAnswer()">إظهار الإجابة</button>
+            <div class="award-btns" id="award-btns">
+                <button class="action-btn btn-team1" id="btn-aw-t1" onclick="awardPoints('team1')">نقاط لفريق 1</button>
+                <button class="action-btn btn-nobody" onclick="awardPoints('nobody')">لا أحد / خطأ</button>
+                <button class="action-btn btn-team2" id="btn-aw-t2" onclick="awardPoints('team2')">نقاط لفريق 2</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+        // Ensure scripts object exists to catch loaded files
+        window.gameQuestions = {};
+
+        // Load config from Local Storage
+        let config = JSON.parse(localStorage.getItem('sinjim_config'));
+        if (!config) {
+            window.location.href = 'start_game.html';
+        }
+
+        // Global Game State
+        let currentQuestion = null;
+        let activeTimer = null;
+        let timeLeft = config.timer;
+
+        // Sound Engine
+        const audioCtxGame = new (window.AudioContext || window.webkitAudioContext)();
+        function playGameSound(type) {
+            if (audioCtxGame.state === 'suspended') audioCtxGame.resume();
+            const osc = audioCtxGame.createOscillator();
+            const gain = audioCtxGame.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtxGame.destination);
+            const now = audioCtxGame.currentTime;
+
+            if (type === 'tick') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            } else if (type === 'tick-fast') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(1000, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            } else if (type === 'buzz') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.5);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                osc.start(now); osc.stop(now + 0.5);
+            } else if (type === 'swoosh') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.3);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.setValueAtTime(600, now + 0.1);
+                osc.frequency.setValueAtTime(800, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                osc.start(now); osc.stop(now + 0.6);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(150, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc.start(now); osc.stop(now + 0.4);
+            } else if (type === 'lifeline') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500, now);
+                osc.frequency.setValueAtTime(700, now + 0.1);
+                osc.frequency.setValueAtTime(900, now + 0.2);
+                osc.frequency.setValueAtTime(1200, now + 0.3);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                osc.start(now); osc.stop(now + 0.5);
+            }
+        }
+
+        let isTimerPaused = false;
+
+        // Categories available lookup for names and images
+        const categoriesLookup = {
+            'اعلام': { name: 'أعلام', img: 'img/اعلام.jpg' },
+            'تكنولوجيا': { name: 'تكنولوجيا', img: 'img/تكنولوجيا.jpg' },
+            'جغرافيا': { name: 'جغرافيا', img: 'img/جغرافيا.jpg' },
+            'حرب العالميه': { name: 'حرب عالمية', img: 'img/حرب العالميه.jpg' },
+            'رسم': { name: 'رسم', img: 'img/رسم.jpg' },
+            'عالم الحيوان': { name: 'عالم الحيوان', img: 'img/عالم الحيوان.jpg' },
+            'عواصم البلاد': { name: 'عواصم البلاد', img: 'img/عواصم البلاد.jpg' },
+            'فن تركي': { name: 'فن تركي', img: 'img/فن تركي.jpg' },
+            'فن عربي': { name: 'فن عربي', img: 'img/فن عربي.jpg' },
+            'كاس عالم': { name: 'كأس عالم', img: 'img/كاس عالم.jpeg' },
+            'لون العلم': { name: 'لون العلم', img: 'img/لون العلم.jpg' },
+            'مسلسلات رمضان': { name: 'مسلسلات رمضان', img: 'img/مسلسلات رمضان.jpg' },
+            'معلومات عامه': { name: 'معلومات عامة', img: 'img/معلومات عامه.jpg' },
+            'ولا كلمه فن عربي': { name: 'ولا كلمة فن عربي', img: 'img/ولا كلمه فن عربي.jpg' },
+            'الذكاء': { name: 'الذكاء', img: 'img/الذكاء.jpg' },
+            'من هو اللاعب': { name: 'من هو اللاعب', img: 'img/من هو اللاعب.jpg' },
+            'ولا كلمه لاعبين': { name: 'ولا كلمة (لاعبين)', img: 'img/ولا كلمه لاعبين.jpg' },
+            'كرة قدم عالمية': { name: 'كرة قدم عالمية', img: 'img/كرة قدم عالمية.jpg' },
+            'مسيرة اللاعب': { name: 'مسيرة اللاعب', img: 'img/مسيرة اللاعب.jpg' },
+            'خمن اللاعب': { name: 'خمن اللاعب', img: 'img/خمن اللاعب.jpg' },
+            'رتب الحروف': { name: 'رتب الحروف', img: 'img/حروف.jpg' },
+            'اسئلة دينية': { name: 'أسئلة دينية', img: 'img/اسئلة دينية.jpg' }
+        };
+
+        // Inject JS files to load questions
+        function loadCategoryQuestions() {
+            let loadedCount = 0;
+            const targetCount = config.categories.length;
+
+            config.categories.forEach(catId => {
+                let s = document.createElement('script');
+                s.src = `q/${catId}.js`;
+                s.onload = () => {
+                    loadedCount++;
+                    if (loadedCount === targetCount) {
+                        initGameUI();
+                    }
+                };
+                s.onerror = () => {
+                    alert(`فشل تحميل أسئلة الفئة: ${catId}`);
+                    loadedCount++;
+                    if (loadedCount === targetCount) initGameUI();
+                };
+                document.head.appendChild(s);
+            });
+        }
+
+        // Initialization
+        function initGameUI() {
+            document.getElementById('loading').style.display = 'none';
+
+            // Set Names
+            document.getElementById('t1-name').textContent = config.team1.name;
+            document.getElementById('t2-name').textContent = config.team2.name;
+
+            // Set buttons in award panel
+            document.getElementById('btn-aw-t1').textContent = `النقاط لـ ${config.team1.name}`;
+            document.getElementById('btn-aw-t2').textContent = `النقاط لـ ${config.team2.name}`;
+
+            updateBoardUI();
+            buildGrid();
+        }
+
+        function buildGrid() {
+            const grid = document.getElementById('board-grid');
+            grid.innerHTML = '';
+
+            config.categories.forEach(catId => {
+                const info = categoriesLookup[catId] || { name: catId, img: '' };
+                const col = document.createElement('div');
+                col.className = 'category-column';
+
+                // For each category we need left col, banner center, right col
+                col.innerHTML = `
+                    <div class="points-col">
+                        <button class="point-btn" id="btn_${catId}_left_200" onclick="openQuestion('${catId}', 200, 'left')">200</button>
+                        <button class="point-btn" id="btn_${catId}_left_400" onclick="openQuestion('${catId}', 400, 'left')">400</button>
+                        <button class="point-btn" id="btn_${catId}_left_600" onclick="openQuestion('${catId}', 600, 'left')">600</button>
+                    </div>
+                    
+                    <div class="category-center">
+                        <img src="${info.img}" alt="${info.name}" class="cat-img" onerror="this.src='https://via.placeholder.com/150?text=No+Img'">
+                        <div class="cat-name">${info.name}</div>
+                    </div>
+
+                    <div class="points-col">
+                        <button class="point-btn" id="btn_${catId}_right_200" onclick="openQuestion('${catId}', 200, 'right')">200</button>
+                        <button class="point-btn" id="btn_${catId}_right_400" onclick="openQuestion('${catId}', 400, 'right')">400</button>
+                        <button class="point-btn" id="btn_${catId}_right_600" onclick="openQuestion('${catId}', 600, 'right')">600</button>
+                    </div>
+                `;
+                grid.appendChild(col);
+            });
+
+            // Re-apply disabled state for already played questions
+            if (config.playedQuestions) {
+                Object.keys(config.playedQuestions).forEach(key => {
+                    let btn = document.getElementById(`btn_${key}`);
+                    if (btn) btn.disabled = true;
+                });
+            }
+        }
+
+        function updateBoardUI() {
+            // Scores with animation
+            animateValue(document.getElementById('t1-score'), parseInt(document.getElementById('t1-score').textContent), config.team1.score, 500);
+            animateValue(document.getElementById('t2-score'), parseInt(document.getElementById('t2-score').textContent), config.team2.score, 500);
+
+            // Turn Highlight
+            let tName = config.currentTurn === 'team1' ? config.team1.name : config.team2.name;
+            document.getElementById('turn-display').textContent = `دور فريق : ${tName}`;
+
+            document.querySelector('.team-panel:not(.rhs)').classList.toggle('active-turn', config.currentTurn === 'team1');
+            document.querySelector('.team-panel.rhs').classList.toggle('active-turn', config.currentTurn === 'team2');
+
+            // Lifelines Team 1
+            document.getElementById('ll-t1-phone').disabled = config.team1.lifelines.phone === 0;
+            document.getElementById('ll-t1-double').disabled = config.team1.lifelines.double === 0;
+            document.getElementById('ll-t1-skip').disabled = config.team1.lifelines.skip === 0;
+
+            // Lifelines Team 2
+            document.getElementById('ll-t2-phone').disabled = config.team2.lifelines.phone === 0;
+            document.getElementById('ll-t2-double').disabled = config.team2.lifelines.double === 0;
+            document.getElementById('ll-t2-skip').disabled = config.team2.lifelines.skip === 0;
+
+            saveConfig();
+        }
+
+        function animateValue(obj, start, end, duration) {
+            if (start === end) return;
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // --- Question Mechanics ---
+        function getUnplayedQuestion(catId, points) {
+            let qPool = window.gameQuestions[catId];
+            if (!qPool || !qPool[points]) return { question: "لا توجد أسئلة", answer: "لا يوجد", points: points };
+
+            let possibleqs = qPool[points];
+            if (possibleqs.length === 0) return { question: "لا توجد أسئلة بهذا المستوى", answer: "?", points: points };
+
+            // History logic (Not repeating questions)
+            let historyKey = `history_sinjim_${catId}_${points}`;
+            let history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+
+            // Questions not in history
+            let fresh = possibleqs.filter(q => !history.includes(q.question));
+
+            if (fresh.length === 0) {
+                // If all played, reset history to reuse them
+                fresh = possibleqs;
+                history = [];
+            }
+
+            // Pick random
+            let chosen = fresh[Math.floor(Math.random() * fresh.length)];
+
+            // Add to history
+            history.push(chosen.question);
+            localStorage.setItem(historyKey, JSON.stringify(history));
+
+            return { question: chosen.question, answer: chosen.answer, points: points };
+        }
+
+        function openQuestion(catId, points, side) {
+            playGameSound('swoosh');
+            let info = categoriesLookup[catId] || { name: catId };
+            let qData = getUnplayedQuestion(catId, points);
+
+            currentQuestion = {
+                id: `${catId}_${side}_${points}`, // to mark disabled
+                points: points,
+                data: qData
+            };
+
+            // Setup Q UI
+            document.getElementById('q-cat-name').textContent = info.name;
+            document.getElementById('q-points-val').textContent = points;
+            // Detect if question is an emoji flag (starts with emoji regional indicator)
+            const isEmojiOnly = /^[\u{1F1E0}-\u{1F1FF}]{2}(\s|$)/u.test(qData.question.trim());
+            if (isEmojiOnly) {
+                // Show emoji very large for flag questions
+                const parts = qData.question.split(/(^[\u{1F1E0}-\u{1F1FF}]{2})/u);
+                const flag = qData.question.match(/^[\u{1F1E0}-\u{1F1FF}]{2}/u)?.[0] || qData.question;
+                const rest = qData.question.slice(flag.length).trim();
+                document.getElementById('q-text').innerHTML = `<span class="emoji-flag animate__animated animate__heartBeat animate__infinite">${flag}</span>${rest ? `<span>${rest}</span>` : ''}`;
+            } else {
+                document.getElementById('q-text').innerHTML = qData.question;
+            }
+            document.getElementById('q-answer').textContent = qData.answer;
+            // Parse emojis into standard SVG images asynchronously to prevent UI stutter
+            if (window.twemoji) {
+                setTimeout(() => {
+                    twemoji.parse(document.getElementById('q-text'));
+                    twemoji.parse(document.getElementById('q-answer'));
+                }, 50);
+            }
+
+            // ============================================================
+            // فئة الرسم: بدل السؤال، نعرض QR Code فيه الكلمة المراد رسمها
+            // ============================================================
+            const catData = window.gameQuestions && window.gameQuestions[catId];
+            if (catData && catData["__type__"] === "qr-drawing") {
+                const wordToDraw = qData.answer;
+                const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(wordToDraw) + '&color=0f172a&bgcolor=ffffff&qzone=1';
+                document.getElementById('q-text').innerHTML =
+                    '<div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:5px 0">' +
+                    '  <div style="font-size:1rem;color:#f97316;font-weight:bold;letter-spacing:1px">امسح بموبايلك 📱</div>' +
+                    '  <img src="' + qrUrl + '" style="width:220px;height:220px;border-radius:14px;padding:10px;background:white;box-shadow:0 8px 32px rgba(0,0,0,0.5)" alt="QR" />' +
+                    '  <div style="font-size:0.82rem;color:#94a3b8;text-align:center;line-height:1.6">' +
+                    '    افتح كاميرا الموبايل أو أي تطبيق QR<br>' +
+                    '    <span style="color:#ef4444;font-size:0.78rem">لا تريه لأحد! ارسم الكلمة فقط</span>' +
+                    '  </div>' +
+                    '</div>';
+                // نخفي الإجابة عشان محدش يشوفها على الشاشة
+                document.getElementById('q-answer').style.display = 'none';
+            } else if (catData && catData["__type__"] === "scramble") {
+                // Scramble the letters of the answer
+                let word = qData.answer;
+                let letters = word.split('').filter(char => char !== ' '); // Remove spaces if any
+                // Fisher-Yates shuffle
+                for (let i = letters.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [letters[i], letters[j]] = [letters[j], letters[i]];
+                }
+                document.getElementById('q-text').innerHTML = `<div style="font-size: 5vw; letter-spacing: 15px; font-weight: 900; color: #f97316;">${letters.join(' ')}</div>`;
+                document.getElementById('q-answer').style.display = 'none';
+            } else {
+                // Hide answer (normal questions)
+                document.getElementById('q-answer').style.display = 'none';
+            }
+            document.getElementById('btn-show-ans').style.display = 'block';
+            document.getElementById('award-btns').style.display = 'none';
+
+            // Timer as Stopwatch
+            timeLeft = 0;
+            let timerEl = document.getElementById('q-timer');
+            timerEl.textContent = timeLeft;
+            timerEl.style.color = '#fff';
+            timerEl.classList.remove('timer-pulse');
+            isTimerPaused = false;
+            document.getElementById('btn-toggle-timer').innerHTML = '<i class="fas fa-pause"></i>';
+
+            clearInterval(activeTimer);
+            activeTimer = setInterval(timerTick, 1000);
+
+            // Show screen
+            document.getElementById('q-screen').classList.add('active');
+        }
+
+        function timerTick() {
+            if (isTimerPaused) return;
+            timeLeft++;
+            let timerEl = document.getElementById('q-timer');
+            timerEl.textContent = timeLeft;
+
+            // Just normal tick sound every second
+            // Uncomment if you want ticking sound
+            // playGameSound('tick');
+        }
+
+        function toggleTimer() {
+            isTimerPaused = !isTimerPaused;
+            const btn = document.getElementById('btn-toggle-timer');
+            if (isTimerPaused) {
+                btn.innerHTML = '<i class="fas fa-play"></i>';
+            } else {
+                btn.innerHTML = '<i class="fas fa-pause"></i>';
+            }
+        }
+
+        function resetTimer() {
+            timeLeft = 0;
+            document.getElementById('q-timer').textContent = timeLeft;
+            isTimerPaused = false;
+            document.getElementById('btn-toggle-timer').innerHTML = '<i class="fas fa-pause"></i>';
+        }
+
+        function showAnswer() {
+            clearInterval(activeTimer);
+            document.getElementById('q-answer').style.display = 'block';
+            document.getElementById('btn-show-ans').style.display = 'none';
+            document.getElementById('award-btns').style.display = 'flex';
+        }
+
+        function showFloatingPoints(amount, team) {
+            let el = document.createElement('div');
+            el.className = `floating-score ${amount < 0 ? 'negative' : ''}`;
+            el.textContent = amount > 0 ? `+${amount}` : amount;
+
+            let anchor = document.getElementById(team === 'team1' ? 't1-score' : 't2-score');
+            let rect = anchor.getBoundingClientRect();
+
+            el.style.left = `${rect.left + rect.width / 2}px`;
+            el.style.top = `${rect.top}px`;
+            document.body.appendChild(el);
+
+            setTimeout(() => el.remove(), 1500);
+        }
+
+        function awardPoints(team) {
+            if (team === 'team1') {
+                config.team1.score += currentQuestion.points;
+                playGameSound('correct');
+                // confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                showFloatingPoints(currentQuestion.points, 'team1');
+            } else if (team === 'team2') {
+                config.team2.score += currentQuestion.points;
+                playGameSound('correct');
+                // confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                showFloatingPoints(currentQuestion.points, 'team2');
+            } else {
+                playGameSound('wrong');
+            }
+
+            // Mark question as played
+            config.playedQuestions[currentQuestion.id] = true;
+            let btn = document.getElementById(`btn_${currentQuestion.id}`);
+            if (btn) btn.disabled = true;
+
+            // Switch turn automatically
+            config.currentTurn = config.currentTurn === 'team1' ? 'team2' : 'team1';
+
+            // Hide Q Screen
+            document.getElementById('q-screen').classList.remove('active');
+            updateBoardUI();
+        }
+
+        // --- Lifelines & Manual adjustments ---
+        function useLifeline(team, type) {
+            let tObj = config[team];
+            let typeName = type === 'phone' ? 'اتصال بصديق' : type === 'double' ? 'جاوب مرتين' : 'استريح';
+
+            if (tObj.lifelines[type] > 0) {
+                Swal.fire({
+                    title: `تفعيل ${typeName}؟`,
+                    text: `سيتم خصم هذه الوسيلة من فريق ${tObj.name}.`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'نعم، استخدمها',
+                    cancelButtonText: 'إلغاء',
+                    confirmButtonColor: '#ff7b3f'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        playGameSound('lifeline');
+                        tObj.lifelines[type]--;
+                        updateBoardUI();
+                    }
+                });
+            }
+        }
+
+        function manualScore(team, amount) {
+            config[team].score += amount;
+            if (config[team].score < 0) config[team].score = 0;
+            showFloatingPoints(amount, team);
+            updateBoardUI();
+        }
+
+        function saveConfig() {
+            localStorage.setItem('sinjim_config', JSON.stringify(config));
+        }
+
+        function confirmExit() {
+            Swal.fire({
+                title: 'إنهاء اللعبة؟',
+                text: 'ستفقد التقدم إذا لم تستكمله، هل أنت متأكد؟',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، خروج',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#d33'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = 'start_game.html';
+                }
+            });
+        }
+
+        // Start booting
+        loadCategoryQuestions();
+
+    </script>
+</body>
+
+</html>
