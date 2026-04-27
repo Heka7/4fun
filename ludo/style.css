@@ -2,6 +2,7 @@ body {
   background:#1e1e1e;
   color:white;
   text-align:center;
+  font-family:Arial;
 }
 
 #board{
@@ -15,12 +16,17 @@ body {
 .cell{
   border:1px solid #444;
   aspect-ratio:1;
+  position:relative;
 }
 
 .piece{
-  width:80%;
-  height:80%;
+  width:70%;
+  height:70%;
   border-radius:50%;
+  position:absolute;
+  top:15%;
+  left:15%;
+  transition: all .3s ease;
 }
 
 .red{background:red;}
