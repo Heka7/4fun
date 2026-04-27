@@ -87,12 +87,13 @@ const PATHS = {
   ]
 };
 
-// مواضع القطع في البيت (4 مربعات ملونة داخل كل ركن)
+// مراكز المربعات الكبيرة (4 مربعات 2×2 داخل كل ركن) – بإحداثيات عائمة
+// كل مربع يمتد خليتين في كل اتجاه، والقطعة ترسم في المركز
 const HOME_POSITIONS = {
-  red:    [[1,1],[1,2],[2,1],[2,2]],
-  green:  [[1,11],[1,12],[2,11],[2,12]],
-  yellow: [[11,1],[11,2],[12,1],[12,2]],
-  blue:   [[11,11],[11,12],[12,11],[12,12]]
+  red:    [[1.5,1.5],[1.5,3.5],[3.5,1.5],[3.5,3.5]],
+  green:  [[1.5,10.5],[1.5,12.5],[3.5,10.5],[3.5,12.5]],
+  yellow: [[10.5,1.5],[10.5,3.5],[12.5,1.5],[12.5,3.5]],
+  blue:   [[10.5,10.5],[10.5,12.5],[12.5,10.5],[12.5,12.5]]
 };
 
 // خلايا الحماية (النجمة)
@@ -134,8 +135,6 @@ function drawBoard() {
   const cs = cellSize;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // خلفية بيضاء
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -143,6 +142,9 @@ function drawBoard() {
   for (let r = 0; r < 15; r++)
     for (let c = 0; c < 15; c++)
       drawCell(r, c, cs);
+
+  // رسم مناطق البيت (4 مربعات كبيرة)
+  drawHomeAreas(cs);
 
   // المركز
   drawCenter(cs);
@@ -154,32 +156,18 @@ function drawBoard() {
 
   // القطع
   if (G) {
-    const cellMap = {};
     G.players.forEach((pl, pi) => {
       pl.pieces.forEach((pos, idx) => {
         if (pos >= 57) return;
-        let key;
+        let gr, gc;
         if (pos === -1) {
-          const hp = HOME_POSITIONS[pl.color][idx];
-          key = `H${hp[0]}_${hp[1]}`;
+          [gr, gc] = HOME_POSITIONS[pl.color][idx]; // float center
         } else {
           const cell = PATHS[pl.color][pos];
           if (!cell) return;
-          key = `P${cell[0]}_${cell[1]}`;
+          [gr, gc] = cell;
         }
-        if (!cellMap[key]) cellMap[key] = [];
-        cellMap[key].push({ pl, pi, idx });
-      });
-    });
-
-    Object.values(cellMap).forEach(group => {
-      group.forEach((item, gi) => {
-        const { pl, idx } = item;
-        const pos = pl.pieces[idx];
-        let gr, gc;
-        if (pos === -1) [gr, gc] = HOME_POSITIONS[pl.color][idx];
-        else [gr, gc] = PATHS[pl.color][pos];
-        drawPiece(gr, gc, pl.color, gi, group.length, idx, cs);
+        drawPiece(gr, gc, pl.color, 0, 1, idx, cs);
       });
     });
 
@@ -192,17 +180,64 @@ function drawBoard() {
         let gr, gc;
         if (pos === -1) [gr, gc] = HOME_POSITIONS[pl.color][pieceIdx];
         else { const cell = PATHS[pl.color][pos]; if (!cell) return; [gr, gc] = cell; }
-        // حلقة وميض ذهبية
+        const px = gc * cs, py = gr * cs;
         ctx.beginPath();
-        ctx.arc(gc * cs + cs / 2, gr * cs + cs / 2, cs * 0.44, 0, Math.PI * 2);
+        ctx.arc(px, py, cs * 0.52, 0, Math.PI * 2);
         ctx.strokeStyle = '#FFD700';
-        ctx.lineWidth = 2.5;
-        ctx.setLineDash([5, 3]);
+        ctx.lineWidth = 3;
+        ctx.setLineDash([6, 3]);
         ctx.stroke();
         ctx.setLineDash([]);
       });
     }
   }
+}
+
+/* ── مناطق البيت: 4 مربعات كبيرة (2×2 خلية لكل قطعة) ── */
+function drawHomeAreas(cs) {
+  const defs = [
+    { color: 'red',    innerR: 1, innerC: 1 },
+    { color: 'green',  innerR: 1, innerC: 9 },
+    { color: 'yellow', innerR: 9, innerC: 1 },
+    { color: 'blue',   innerR: 9, innerC: 9 },
+  ];
+
+  defs.forEach(({ color, innerR, innerC }) => {
+    const col = COLORS[color];
+    const wx = innerC * cs, wy = innerR * cs;
+    const wSize = 5 * cs;
+
+    // المربع الأبيض الكبير
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(wx, wy, wSize, wSize);
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(wx, wy, wSize, wSize);
+
+    // 4 مربعات ملونة كبيرة (كل واحد 2×2 خلية)
+    HOME_POSITIONS[color].forEach(([slotR, slotC]) => {
+      // top-left corner of the 2×2 slot
+      const slotX = (slotC - 1) * cs;
+      const slotY = (slotR - 1) * cs;
+      const slotSize = 2 * cs;
+      const pad = cs * 0.1;
+
+      // خلفية ملونة
+      ctx.fillStyle = col.bg;
+      roundRect(slotX + pad, slotY + pad, slotSize - pad*2, slotSize - pad*2, cs * 0.3);
+      ctx.fill();
+
+      // ظل خفيف داخلي
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // بريق داخلي
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      roundRect(slotX + pad + cs*0.1, slotY + pad + cs*0.1, (slotSize - pad*2)*0.55, (slotSize - pad*2)*0.35, cs*0.15);
+      ctx.fill();
+    });
+  });
 }
 
 /* ── رسم خلية ── */
