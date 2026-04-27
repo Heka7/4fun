@@ -30,6 +30,9 @@ html, body {
   user-select: none;
 }
 
+/* إخفاء عام */
+.hidden { display: none !important; }
+
 /* ====== شاشات ====== */
 .screen {
   position: fixed;
@@ -560,6 +563,7 @@ input:focus { border-color: var(--accent); }
   box-shadow: var(--shadow);
   overflow: hidden;
 }
+#chat-panel.hidden { display: none !important; }
 .chat-header {
   display: flex;
   justify-content: space-between;
@@ -629,6 +633,7 @@ input:focus { border-color: var(--accent); }
   z-index: 100;
   backdrop-filter: blur(6px);
 }
+#win-overlay.hidden { display: none !important; }
 .win-card {
   background: var(--surface);
   border-radius: 24px;
