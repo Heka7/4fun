@@ -1,10 +1,10 @@
 /* ===== board.js ===== */
 
 const COLORS = {
-  red:    { bg:'#1565C0', text:'#fff' },
-  green:  { bg:'#C62828', text:'#fff' },
-  yellow: { bg:'#F9A825', text:'#000' },
-  blue:   { bg:'#2E7D32', text:'#fff' }
+  red:    { bg:'#ef4444', text:'#fff' },
+  green:  { bg:'#22c55e', text:'#fff' },
+  yellow: { bg:'#eab308', text:'#000' },
+  blue:   { bg:'#3b82f6', text:'#fff' }
 };
 
 const COLOR_ORDER = ['red','green','yellow','blue'];
@@ -109,7 +109,7 @@ function drawBoard() {
   const cs = cellSize;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = '#1a2744';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // رسم الخلايا
@@ -124,7 +124,7 @@ function drawBoard() {
   drawCenter(cs);
 
   // حدود خارجية
-  ctx.strokeStyle = '#222';
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
   ctx.lineWidth = 3;
   ctx.strokeRect(1.5, 1.5, canvas.width - 3, canvas.height - 3);
 
@@ -190,9 +190,9 @@ function drawHomeAreas(cs) {
     const wy = (r0 + 1) * cs;
     const wSize = 4 * cs;
 
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#131e35';
     ctx.fillRect(wx, wy, wSize, wSize);
-    ctx.strokeStyle = '#333';
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
     ctx.lineWidth = 2;
     ctx.strokeRect(wx, wy, wSize, wSize);
 
@@ -234,14 +234,14 @@ function drawCell(r, c, cs) {
   const isYellowInner = r >= 10 && r <= 13 && c >= 1 && c <= 4;
   const isBlueInner   = r >= 10 && r <= 13 && c >= 10 && c <= 13;
 
-  let fill = '#fff';
+  let fill = '#131e35';
 
   if (!inCenter) {
     if (isRedHome)    fill = COLORS.red.bg;
     if (isGreenHome)  fill = COLORS.green.bg;
     if (isYellowHome) fill = COLORS.yellow.bg;
     if (isBlueHome)   fill = COLORS.blue.bg;
-    if (isRedInner || isGreenInner || isYellowInner || isBlueInner) fill = '#fff';
+    if (isRedInner || isGreenInner || isYellowInner || isBlueInner) fill = '#131e35';
 
     // ممرات المنزل
     if (r === 7 && c >= 1 && c <= 5)  fill = COLORS.red.bg;
@@ -259,7 +259,7 @@ function drawCell(r, c, cs) {
 
   ctx.fillStyle = fill;
   ctx.fillRect(x, y, cs, cs);
-  ctx.strokeStyle = '#888';
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
   ctx.lineWidth = 0.5;
   ctx.strokeRect(x, y, cs, cs);
 
@@ -285,7 +285,7 @@ function drawCell(r, c, cs) {
 
 function drawArrow(cx, cy, dir, cs) {
   const s = cs * 0.22;
-  ctx.fillStyle = '#000';
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
   ctx.beginPath();
   if (dir === 'right') {
     ctx.moveTo(cx - s, cy - s * 0.6); ctx.lineTo(cx + s, cy); ctx.lineTo(cx - s, cy + s * 0.6);
@@ -315,9 +315,9 @@ function drawStarShape(cx, cy, outerR, innerR) {
   ctx.closePath();
 
   // ملء أبيض بحدود داكنة – زي اللودو الحقيقي
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
   ctx.fill();
-  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
   ctx.lineWidth = 1.2;
   ctx.stroke();
 }
@@ -340,7 +340,7 @@ function drawCenter(cs) {
     ctx.closePath();
     ctx.fillStyle = t.color;
     ctx.fill();
-    ctx.strokeStyle = '#555';
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
     ctx.lineWidth = 1;
     ctx.stroke();
   });
