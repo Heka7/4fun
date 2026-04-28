@@ -98,8 +98,18 @@ function resizeBoard() {
   if (!wrapper) return;
   const size = Math.min(wrapper.clientWidth - 10, wrapper.clientHeight - 10, 560);
   cellSize = Math.floor(Math.max(size, 270) / 15);
-  canvas.width = cellSize * 15;
-  canvas.height = cellSize * 15;
+  
+  const dpr = window.devicePixelRatio || 1;
+  const logicalSize = cellSize * 15;
+  
+  canvas.style.width = logicalSize + 'px';
+  canvas.style.height = logicalSize + 'px';
+  
+  canvas.width = logicalSize * dpr;
+  canvas.height = logicalSize * dpr;
+  
+  ctx.scale(dpr, dpr);
+  
   if (window.G) drawBoard();
 }
 
@@ -108,9 +118,10 @@ function drawBoard() {
   const G = window.G;
   const cs = cellSize;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#1a2744';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const logicalSize = cs * 15;
+  ctx.clearRect(0, 0, logicalSize, logicalSize);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, logicalSize, logicalSize);
 
   // رسم الخلايا
   for (let r = 0; r < 15; r++)
@@ -124,9 +135,9 @@ function drawBoard() {
   drawCenter(cs);
 
   // حدود خارجية
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.strokeStyle = '#222';
   ctx.lineWidth = 3;
-  ctx.strokeRect(1.5, 1.5, canvas.width - 3, canvas.height - 3);
+  ctx.strokeRect(1.5, 1.5, logicalSize - 3, logicalSize - 3);
 
   // القطع
   if (G) {
@@ -190,9 +201,9 @@ function drawHomeAreas(cs) {
     const wy = (r0 + 1) * cs;
     const wSize = 4 * cs;
 
-    ctx.fillStyle = '#131e35';
+    ctx.fillStyle = '#fff';
     ctx.fillRect(wx, wy, wSize, wSize);
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.strokeStyle = '#333';
     ctx.lineWidth = 2;
     ctx.strokeRect(wx, wy, wSize, wSize);
 
@@ -234,14 +245,14 @@ function drawCell(r, c, cs) {
   const isYellowInner = r >= 10 && r <= 13 && c >= 1 && c <= 4;
   const isBlueInner   = r >= 10 && r <= 13 && c >= 10 && c <= 13;
 
-  let fill = '#131e35';
+  let fill = '#fff';
 
   if (!inCenter) {
     if (isRedHome)    fill = COLORS.red.bg;
     if (isGreenHome)  fill = COLORS.green.bg;
     if (isYellowHome) fill = COLORS.yellow.bg;
     if (isBlueHome)   fill = COLORS.blue.bg;
-    if (isRedInner || isGreenInner || isYellowInner || isBlueInner) fill = '#131e35';
+    if (isRedInner || isGreenInner || isYellowInner || isBlueInner) fill = '#fff';
 
     // ممرات المنزل
     if (r === 7 && c >= 1 && c <= 5)  fill = COLORS.red.bg;
@@ -259,7 +270,7 @@ function drawCell(r, c, cs) {
 
   ctx.fillStyle = fill;
   ctx.fillRect(x, y, cs, cs);
-  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.strokeStyle = '#888';
   ctx.lineWidth = 0.5;
   ctx.strokeRect(x, y, cs, cs);
 
@@ -285,7 +296,7 @@ function drawCell(r, c, cs) {
 
 function drawArrow(cx, cy, dir, cs) {
   const s = cs * 0.22;
-  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillStyle = '#000';
   ctx.beginPath();
   if (dir === 'right') {
     ctx.moveTo(cx - s, cy - s * 0.6); ctx.lineTo(cx + s, cy); ctx.lineTo(cx - s, cy + s * 0.6);
@@ -315,9 +326,9 @@ function drawStarShape(cx, cy, outerR, innerR) {
   ctx.closePath();
 
   // ملء أبيض بحدود داكنة – زي اللودو الحقيقي
-  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
   ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
   ctx.lineWidth = 1.2;
   ctx.stroke();
 }
@@ -340,7 +351,7 @@ function drawCenter(cs) {
     ctx.closePath();
     ctx.fillStyle = t.color;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.strokeStyle = '#555';
     ctx.lineWidth = 1;
     ctx.stroke();
   });
@@ -405,8 +416,9 @@ function roundRect(x, y, w, h, r) {
 function onBoardClick(e) {
   if (!window.G) return;
   const rect = canvas.getBoundingClientRect();
-  const px = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const py = (e.clientY - rect.top) * (canvas.height / rect.height);
+  const logicalSize = cellSize * 15;
+  const px = (e.clientX - rect.left) * (logicalSize / rect.width);
+  const py = (e.clientY - rect.top) * (logicalSize / rect.height);
   // float row/col للتوافق مع HOME_POSITIONS و PATHS
   window.handleBoardClick(py / cellSize, px / cellSize);
 }
