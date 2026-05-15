@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لعبة الدومينو</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- شاشة تسجيل الدخول / إنشاء أو الانضمام لغرفة -->
+        <div id="lobby-screen" class="screen active">
+            <div class="glass-panel">
+                <h1 class="game-title">دومينو <i class="fa-solid fa-dice-d20"></i></h1>
+                <div class="input-group">
+                    <label>اسم اللاعب</label>
+                    <input type="text" id="player-name" placeholder="أدخل اسمك هنا..." readonly title="يتم تعيين الاسم من الصفحة الرئيسية">
+                </div>
+                <div class="actions">
+                    <div style="display: flex; gap: 10px;">
+                        <button id="btn-create-room" class="btn primary" style="flex: 1;">إنشاء غرفة أونلاين</button>
+                        <button id="btn-show-offline" class="btn secondary" style="flex: 1;">لعب أوفلاين</button>
+                    </div>
+                    <div class="divider"><span>أو</span></div>
+                    <div class="join-group">
+                        <input type="text" id="room-code-input" placeholder="كود الغرفة (مثال: AB12)">
+                        <button id="btn-join-room" class="btn primary">انضمام</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- شاشة الانتظار في الغرفة -->
+        <div id="room-screen" class="screen">
+            <div class="glass-panel room-panel">
+                <div class="room-header">
+                    <h2>غرفة: <span id="display-room-code" class="highlight"></span></h2>
+                    <button id="btn-leave-room" class="btn-icon"><i class="fa-solid fa-arrow-right-from-bracket"></i> خروج</button>
+                </div>
+                <div class="players-list-container">
+                    <h3>اللاعبون المتصلون (<span id="players-count">1</span>/4)</h3>
+                    <ul id="players-list" class="players-list">
+                        <!-- سيتم إضافة اللاعبين هنا -->
+                    </ul>
+                </div>
+                <div class="room-actions">
+                    <button id="btn-start-game" class="btn primary hidden">بدء اللعبة</button>
+                    <p id="waiting-host-msg" class="waiting-msg">في انتظار قائد الغرفة لبدء اللعبة...</p>
+                </div>
+                <div class="chat-container">
+                    <div class="chat-messages" id="room-chat-messages"></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="room-chat-input" placeholder="اكتب رسالتك...">
+                        <button id="btn-room-chat-send" class="btn-icon"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- شاشة اللعب -->
+        <div id="game-screen" class="screen">
+            <div class="game-header">
+                <div id="turn-indicator" class="turn-indicator">دور: <span id="current-turn-name">...</span></div>
+                <button id="btn-game-menu" class="btn-icon"><i class="fa-solid fa-bars"></i></button>
+            </div>
+            
+            <div id="opponents-area" class="opponents-area">
+                <!-- سيتم إضافة المنافسين هنا (عدد أوراقهم) -->
+            </div>
+
+            <div id="board-container" class="board-container">
+                <div id="board" class="board">
+                    <!-- سيتم رسم الدومينو هنا -->
+                </div>
+            </div>
+
+            <div class="player-area">
+                <div class="player-controls">
+                    <div class="boneyard-container hidden" id="boneyard-container">
+                        <button id="btn-draw-tile" class="btn secondary"><i class="fa-solid fa-layer-group"></i> سحب ورقة (<span id="boneyard-count">14</span>)</button>
+                    </div>
+                    <button id="btn-pass-turn" class="btn danger hidden"><i class="fa-solid fa-forward"></i> تمرير الدور</button>
+                </div>
+                <div id="player-hand" class="player-hand">
+                    <!-- أوراق اللاعب الحالي -->
+                </div>
+            </div>
+
+            <!-- قائمة جانبية للدردشة ومعلومات اللعبة -->
+            <div id="game-sidebar" class="game-sidebar">
+                <div class="sidebar-header">
+                    <h3>الدردشة <i class="fa-solid fa-comments"></i></h3>
+                    <button id="btn-close-sidebar" class="btn-icon"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="chat-container">
+                    <div class="chat-messages" id="game-chat-messages"></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="game-chat-input" placeholder="اكتب رسالتك...">
+                        <button id="btn-game-chat-send" class="btn-icon"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- شاشة النهاية -->
+        <div id="result-screen" class="screen">
+            <div class="glass-panel">
+                <h1 id="winner-msg">لقد فزت! 🎉</h1>
+                <div class="result-details" id="result-details"></div>
+                <button id="btn-back-to-room" class="btn primary">العودة للغرفة</button>
+            </div>
+        </div>
+
+        <!-- نافذة منبثقة لاختيار جهة اللعب -->
+        <div id="play-side-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>أين تريد وضع الورقة؟</h3>
+                <div class="modal-actions">
+                    <button id="btn-play-right" class="btn primary">اليمين</button>
+                    <button id="btn-play-left" class="btn secondary">اليسار</button>
+                    <button id="btn-cancel-play" class="btn danger">إلغاء</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة الإعداد للعب الأوفلاين -->
+        <div id="offline-setup-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>إعدادات اللعب الأوفلاين</h3>
+                <div class="input-group" style="margin-top: 15px; margin-bottom: 15px; text-align: right;">
+                    <label>عدد اللاعبين</label>
+                    <select id="offline-player-count" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid rgba(255, 255, 255, 0.1); outline: none;">
+                        <option value="2">2 لاعبين</option>
+                        <option value="3">3 لاعبين</option>
+                        <option value="4">4 لاعبين</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button id="btn-start-offline" class="btn primary">بدء اللعب</button>
+                    <button id="btn-cancel-offline" class="btn danger">إلغاء</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة تمرير الجهاز -->
+        <div id="pass-device-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2 id="pass-device-msg">دور اللاعب ...</h2>
+                <p style="margin-top: 10px; color: #cbd5e1;">يرجى تمرير الجهاز للاعب ثم الضغط على متابعة لكشف الأوراق.</p>
+                <div class="modal-actions">
+                    <button id="btn-continue-turn" class="btn primary">متابعة وكشف الأوراق</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast-container"></div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, update, remove, push, get, child, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCp9_P3K__Sr76iKgaVG1iD4NluUqPtni4",
+            authDomain: "heka-codenames.firebaseapp.com",
+            projectId: "heka-codenames",
+            storageBucket: "heka-codenames.firebasestorage.app",
+            messagingSenderId: "901713932504",
+            appId: "1:901713932504:web:b6710ddf537cd3c7c4e7ad"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // وضع متغيرات Firebase في الـ window لسهولة الوصول من app.js
+        window.firebaseDB = db;
+        window.firebaseRef = ref;
+        window.firebaseSet = set;
+        window.firebaseOnValue = onValue;
+        window.firebaseUpdate = update;
+        window.firebaseRemove = remove;
+        window.firebasePush = push;
+        window.firebaseGet = get;
+        window.firebaseChild = child;
+        window.firebaseOnDisconnect = onDisconnect;
+    </script>
+    <script src="app.js" type="module"></script>
+</body>
+</html>
